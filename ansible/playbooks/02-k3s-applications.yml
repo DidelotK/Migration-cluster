@@ -1,0 +1,35 @@
+---
+# Playbook pour l'installation des applications K3s
+- name: "🏗️ Installation des applications K3s essentielles"
+  hosts: k3s_servers
+  become: true
+  gather_facts: true
+
+  roles:
+  - role: ingress-nginx
+    tags: [ ingress-nginx ]
+
+  - role: cert-manager
+    tags: [ cert-manager ]
+
+  - role: external-dns
+    tags: [ external-dns ]
+
+  - role: applications
+    tags: [ applications ]
+
+  post_tasks:
+  - name: "✅ Applications K3s installées"
+    debug:
+      msg: |
+        🎉 Applications K3s installées avec succès!
+
+        📦 Composants installés:
+        - Ingress Nginx {{ ingress_nginx_version | default('latest') }}
+        - Cert Manager {{ cert_manager_version | default('latest') }}
+        - External DNS {{ external_dns_version | default('latest') }}
+
+        🌐 Applications déployées:
+        - Nginx Test: https://nginx.keltio.fr
+
+        🚀 Cluster prêt pour la production!

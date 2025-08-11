@@ -1,0 +1,51 @@
+---
+# Validation de Cert Manager
+
+- name: "🔍 Vérification du statut des pods Cert Manager"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: cert-manager
+    label_selectors:
+    - app.kubernetes.io/instance=cert-manager
+  register: cert_manager_pods
+
+- name: "📊 Validation des pods Cert Manager"
+  assert:
+    that:
+    - cert_manager_pods.resources | length >= 3 # cert-manager, webhook, cainjector
+    - cert_manager_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length == cert_manager_pods.resources | length
+    fail_msg: "❌ Tous les pods Cert Manager ne sont pas en état Running"
+    success_msg: "✅ Tous les pods Cert Manager sont en état Running"
+
+- name: "🔍 Vérification des ClusterIssuers"
+  kubernetes.core.k8s_info:
+    api_version: cert-manager.io/v1
+    kind: ClusterIssuer
+  register: cluster_issuers
+
+- name: "🔑 Validation des ClusterIssuers"
+  assert:
+    that:
+    - cluster_issuers.resources | length >= 3
+    - cluster_issuers.resources | selectattr('metadata.name', 'equalto', 'letsencrypt-prod') | list | length == 1
+    - cluster_issuers.resources | selectattr('metadata.name', 'equalto', 'letsencrypt-staging') | list | length == 1
+    - cluster_issuers.resources | selectattr('metadata.name', 'equalto', 'selfsigned-issuer') | list | length == 1
+    fail_msg: "❌ Les ClusterIssuers ne sont pas correctement configurés"
+    success_msg: "✅ Tous les ClusterIssuers sont configurés"
+
+- name: "✅ Validation complète de Cert Manager"
+  debug:
+    msg: |
+      🎉 Cert Manager validé avec succès!
+
+      📊 Statut:
+      - Pods en cours: {{ cert_manager_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length }}/{{ cert_manager_pods.resources | length }}
+      - ClusterIssuers: {{ cluster_issuers.resources | length }}
+
+      🔑 ClusterIssuers disponibles:
+      {% for issuer in cluster_issuers.resources %}
+      - {{ issuer.metadata.name }}: {{ issuer.status.conditions[0].type if issuer.status.conditions else 'Initializing' }}
+      {% endfor %}
+
+      🚀 Prêt pour la génération automatique de certificats SSL!

@@ -1,0 +1,29 @@
+---
+# Prérequis pour Cert Manager
+
+- name: "🔍 Vérification que le namespace cert-manager n'existe pas"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Namespace
+    name: cert-manager
+  register: cert_manager_namespace
+  failed_when: false
+
+- name: "📁 Création du namespace cert-manager"
+  kubernetes.core.k8s:
+    name: cert-manager
+    api_version: v1
+    kind: Namespace
+    state: present
+  when: cert_manager_namespace.resources | length == 0
+
+- name: "🔍 Vérification que Helm peut accéder au repository"
+  shell: helm repo list | grep jetstack
+  register: jetstack_repo_check
+  failed_when: false
+  changed_when: false
+
+- name: "📦 Vérification du repository Helm jetstack"
+  fail:
+    msg: "Repository Helm jetstack non trouvé. Exécutez d'abord le rôle helm."
+  when: jetstack_repo_check.rc != 0

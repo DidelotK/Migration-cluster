@@ -1,0 +1,22 @@
+---
+# Tâches principales pour l'installation de K3s
+
+- name: "Vérification des prérequis système"
+  include_tasks: prerequisites.yml
+  tags: [ k3s, prerequisites ]
+
+- name: "Installation de K3s"
+  include_tasks: install.yml
+  tags: [ k3s, install ]
+
+- name: "Configuration de K3s"
+  include_tasks: configure.yml
+  tags: [ k3s, configure ]
+
+- name: "Validation de l'installation"
+  include_tasks: validate.yml
+  tags: [ k3s, validate ]
+
+- name: "Configuration du kubeconfig local"
+  include_tasks: kubeconfig.yml
+  tags: [ k3s, kubeconfig ]

@@ -1,0 +1,37 @@
+---
+# Configuration d'External DNS
+
+- name: "⚙️ Configuration des annotations par défaut"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: external-dns-config
+        namespace: external-dns
+      data:
+        default-annotations.yaml: |
+          external-dns.alpha.kubernetes.io/hostname: ""
+          external-dns.alpha.kubernetes.io/ttl: "300"
+    state: present
+
+- name: "📋 Création d'une liste des domaines gérés"
+  set_fact:
+    managed_domains:
+    - "nginx.keltio.fr"
+    - "blog-newsletter-manager.keltio.fr"
+    - "vault.keltio.fr"
+    - "vault-k3s.keltio.fr"
+
+- name: "📊 Affichage des domaines qui seront gérés"
+  debug:
+    msg: |
+      🌐 Domaines qui seront automatiquement gérés par External DNS:
+      {% for domain in managed_domains %}
+      - {{ domain }}
+      {% endfor %}
+
+      ⚙️ Configuration:
+      - Tous les Ingress avec annotations external-dns seront automatiquement synchronisés
+      - TTL par défaut: 300 secondes
+      - Provider: Scaleway DNS

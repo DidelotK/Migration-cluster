@@ -1,0 +1,29 @@
+---
+# Prérequis pour Ingress Nginx
+
+- name: "🔍 Vérification que le namespace ingress-nginx n'existe pas"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Namespace
+    name: ingress-nginx
+  register: ingress_nginx_namespace
+  failed_when: false
+
+- name: "📁 Création du namespace ingress-nginx"
+  kubernetes.core.k8s:
+    name: ingress-nginx
+    api_version: v1
+    kind: Namespace
+    state: present
+  when: ingress_nginx_namespace.resources | length == 0
+
+- name: "🔍 Vérification que Helm peut accéder au repository"
+  shell: helm repo list | grep ingress-nginx
+  register: ingress_nginx_repo_check
+  failed_when: false
+  changed_when: false
+
+- name: "📦 Vérification du repository Helm ingress-nginx"
+  fail:
+    msg: "Repository Helm ingress-nginx non trouvé. Exécutez d'abord le rôle helm."
+  when: ingress_nginx_repo_check.rc != 0

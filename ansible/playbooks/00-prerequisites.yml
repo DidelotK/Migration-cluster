@@ -1,0 +1,27 @@
+---
+# Playbook pour la vérification et installation des prérequis
+- name: "🔍 Vérification et installation des prérequis système"
+  hosts: k3s_servers
+  become: true
+  gather_facts: true
+
+  tasks:
+  - name: "📋 Vérification des prérequis système"
+    include_role:
+      name: k3s
+      tasks_from: prerequisites
+    tags: [ prerequisites ]
+
+  - name: "✅ Prérequis système installés"
+    debug:
+      msg: |
+        🎉 Prérequis installés avec succès!
+
+        ✅ Système mis à jour
+        ✅ Packages requis installés
+        ✅ Modules kernel configurés
+        ✅ Paramètres sysctl optimisés
+        ✅ Swap désactivé
+        ✅ Répertoires K3s créés
+
+        🚀 Système prêt pour l'installation K3s!

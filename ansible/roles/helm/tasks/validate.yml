@@ -1,0 +1,60 @@
+---
+# Validation de l'installation Helm
+
+- name: "Test de la commande helm version"
+  command: helm version
+  register: helm_version_output
+  environment:
+    KUBECONFIG: "{{ k3s_config_file | default('/etc/rancher/k3s/k3s.yaml') }}"
+  become: true
+  changed_when: false
+
+- name: "Validation de la version Helm"
+  assert:
+    that:
+    - helm_version_output.rc == 0
+    - helm_version in helm_version_output.stdout
+    fail_msg: "La version Helm installée ne correspond pas à {{ helm_version }}"
+    success_msg: "Helm {{ helm_version }} installé avec succès"
+
+- name: "Test de connexion au cluster Kubernetes"
+  command: helm list --all-namespaces
+  register: helm_cluster_test
+  environment:
+    KUBECONFIG: "{{ k3s_config_file | default('/etc/rancher/k3s/k3s.yaml') }}"
+  become: true
+  changed_when: false
+
+- name: "Validation de la connexion au cluster"
+  assert:
+    that:
+    - helm_cluster_test.rc == 0
+    fail_msg: "Helm ne peut pas se connecter au cluster Kubernetes"
+    success_msg: "Helm peut se connecter au cluster Kubernetes"
+
+- name: "Vérification que tous les repositories sont configurés"
+  command: helm repo list
+  register: configured_repos
+  environment:
+    KUBECONFIG: "{{ k3s_config_file | default('/etc/rancher/k3s/k3s.yaml') }}"
+  become: true
+  changed_when: false
+
+- name: "Validation des repositories"
+  assert:
+    that:
+    - item.name in configured_repos.stdout
+    fail_msg: "Repository {{ item.name }} n'est pas configuré"
+    success_msg: "Repository {{ item.name }} configuré"
+  loop: "{{ helm_repositories }}"
+
+- name: "Affichage du résumé Helm"
+  debug:
+    msg: |
+      ✅ Helm installé et configuré avec succès!
+
+      📦 Version: {{ helm_version }}
+      🗂️  Repositories configurés: {{ helm_repositories | length }}
+      🔗 Connexion cluster: ✅
+
+      🚀 Prêt pour déployer des charts Helm!

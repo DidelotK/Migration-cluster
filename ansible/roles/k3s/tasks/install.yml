@@ -1,0 +1,88 @@
+---
+# Installation de K3s
+
+- name: "Vérification si K3s est déjà installé"
+  command: which k3s
+  register: k3s_installed
+  ignore_errors: true
+  changed_when: false
+
+- name: "Récupération de la version installée de K3s"
+  command: k3s --version
+  register: k3s_current_version
+  ignore_errors: true
+  changed_when: false
+  when: k3s_installed.rc == 0
+
+- name: "Affichage de la version actuelle"
+  debug:
+    msg: "Version K3s installée: {{ k3s_current_version.stdout.split()[2] }}"
+  when: k3s_installed.rc == 0 and k3s_current_version.rc == 0
+
+- name: "Téléchargement du script d'installation K3s"
+  get_url:
+    url: "{{ k3s_url }}"
+    dest: /tmp/k3s-install.sh
+    mode: '0755'
+    timeout: 30
+  become: true
+
+- name: "Installation de K3s"
+  shell: |
+    INSTALL_K3S_VERSION="{{ k3s_version }}" \
+    INSTALL_K3S_EXEC="server {{ k3s_server_args | join(' ') }}" \
+    /tmp/k3s-install.sh
+  environment:
+    K3S_TOKEN: "{{ k3s_token | default('') }}"
+    K3S_CLUSTER_INIT: "{{ 'true' if inventory_hostname == groups['k3s_servers'][0] else 'false' }}"
+  become: true
+  register: k3s_install_result
+  timeout: "{{ k3s_install_timeout }}"
+  when: k3s_installed.rc != 0 or (k3s_current_version.stdout.split()[2] != k3s_version)
+
+- name: "Attente du démarrage du service K3s"
+  systemd:
+    name: k3s
+    state: started
+    enabled: true
+    daemon_reload: true
+  become: true
+  register: k3s_service_result
+
+- name: "Attente que K3s soit prêt"
+  wait_for:
+    port: 6443
+    host: "{{ ansible_default_ipv4.address }}"
+    delay: 10
+    timeout: "{{ k3s_wait_timeout }}"
+
+- name: "Vérification du statut du service K3s"
+  systemd:
+    name: k3s
+  register: k3s_service_status
+  become: true
+
+- name: "Affichage du statut K3s"
+  debug:
+    msg: |
+      Service K3s: {{ k3s_service_status.status.ActiveState }}
+      Sous-état: {{ k3s_service_status.status.SubState }}
+      Démarré depuis: {{ k3s_service_status.status.ActiveEnterTimestamp }}
+
+- name: "Récupération du token K3s"
+  slurp:
+    src: "{{ k3s_token_file }}"
+  register: k3s_token_content
+  become: true
+  when: inventory_hostname == groups['k3s_servers'][0]
+
+- name: "Sauvegarde du token K3s"
+  set_fact:
+    k3s_token: "{{ k3s_token_content.content | b64decode | trim }}"
+  when: inventory_hostname == groups['k3s_servers'][0]
+
+- name: "Nettoyage du script d'installation"
+  file:
+    path: /tmp/k3s-install.sh
+    state: absent
+  become: true

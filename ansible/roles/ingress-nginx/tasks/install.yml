@@ -1,0 +1,53 @@
+---
+# Installation d'Ingress Nginx
+
+- name: "🔍 Vérification si Ingress Nginx est déjà installé"
+  shell: helm list -n ingress-nginx | grep ingress-nginx
+  register: ingress_nginx_installed
+  failed_when: false
+  changed_when: false
+
+- name: "📥 Installation d'Ingress Nginx via Helm"
+  shell: |
+    helm install ingress-nginx ingress-nginx/ingress-nginx \
+      --namespace ingress-nginx \
+      --create-namespace \
+      --set controller.replicaCount=1 \
+      --set controller.nodeSelector."kubernetes\.io/os"=linux \
+      --set controller.admissionWebhooks.patch.nodeSelector."kubernetes\.io/os"=linux \
+      --set controller.hostNetwork=true \
+      --set controller.service.type=ClusterIP \
+      --set controller.kind=DaemonSet \
+      --set controller.config.use-forwarded-headers="true" \
+      --set controller.config.compute-full-forwarded-for="true" \
+      --set controller.config.use-proxy-protocol="false" \
+      --wait --timeout=300s
+  when: ingress_nginx_installed.rc != 0
+  register: ingress_nginx_install_result
+
+- name: "⏳ Attente que le service Ingress Nginx soit prêt"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Service
+    name: ingress-nginx-controller
+    namespace: ingress-nginx
+    wait: true
+    wait_timeout: 300
+  when: ingress_nginx_installed.rc != 0
+
+- name: "🔍 Récupération des informations du service LoadBalancer"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Service
+    name: ingress-nginx-controller
+    namespace: ingress-nginx
+  register: ingress_service_info
+
+- name: "📊 Affichage des informations du service"
+  debug:
+    msg: |
+      🌐 Service Ingress Nginx configuré:
+      - Type: {{ ingress_service_info.resources[0].spec.type }}
+      - Ports: {{ ingress_service_info.resources[0].spec.ports | map(attribute='port') | list }}
+      - Mode: hostNetwork (ports 80/443 directement sur l'hôte)
+      - Accès: Ports 80/443 accessibles directement sur l'IP du nœud

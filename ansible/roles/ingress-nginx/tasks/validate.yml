@@ -1,0 +1,41 @@
+---
+# Validation d'Ingress Nginx
+
+- name: "🔍 Vérification du statut des pods Ingress Nginx"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: ingress-nginx
+    label_selectors:
+    - app.kubernetes.io/name=ingress-nginx
+  register: ingress_pods
+
+- name: "📊 Validation des pods Ingress Nginx"
+  assert:
+    that:
+    - ingress_pods.resources | length > 0
+    - ingress_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length == ingress_pods.resources | length
+    fail_msg: "❌ Tous les pods Ingress Nginx ne sont pas en état Running"
+    success_msg: "✅ Tous les pods Ingress Nginx sont en état Running"
+
+- name: "🌐 Test de connectivité du service"
+  uri:
+    url: "http://{{ public_ip }}/healthz"
+    method: GET
+    timeout: 30
+    status_code: [ 200, 404 ] # 404 est normal car pas d'Ingress configuré encore
+  register: health_check
+  retries: 3
+  delay: 10
+
+- name: "✅ Validation du health check"
+  debug:
+    msg: |
+      🎉 Ingress Nginx validé avec succès!
+
+      📊 Statut:
+      - Pods en cours: {{ ingress_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length }}/{{ ingress_pods.resources | length }}
+      - Health check: {{ health_check.status }} ({{ health_check.msg | default('OK') }})
+      - URL d'accès: http://{{ public_ip }}
+
+      🚀 Prêt pour les Ingress rules!

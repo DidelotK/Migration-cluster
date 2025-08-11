@@ -1,0 +1,15 @@
+---
+# Tâches principales pour Helm
+
+- name: "Installation de Helm"
+  include_tasks: install.yml
+  tags: [ helm, install ]
+
+- name: "Configuration des repositories Helm"
+  include_tasks: repositories.yml
+  tags: [ helm, repositories ]
+
+- name: "Validation de l'installation Helm"
+  include_tasks: validate.yml
+  tags: [ helm, validate ]
+  when: helm_validate_install

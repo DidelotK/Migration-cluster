@@ -1,0 +1,18 @@
+---
+# Tâches principales pour l'installation de Cert Manager
+
+- name: "📋 Vérification des prérequis Cert Manager"
+  include_tasks: prerequisites.yml
+  tags: [ cert-manager, prerequisites ]
+
+- name: "🚀 Installation de Cert Manager"
+  include_tasks: install.yml
+  tags: [ cert-manager, install ]
+
+- name: "⚙️ Configuration de Cert Manager"
+  include_tasks: configure.yml
+  tags: [ cert-manager, configure ]
+
+- name: "✅ Validation de Cert Manager"
+  include_tasks: validate.yml
+  tags: [ cert-manager, validate ]

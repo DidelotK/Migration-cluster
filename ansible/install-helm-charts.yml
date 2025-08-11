@@ -1,0 +1,220 @@
+---
+- name: Install Helm charts for K3s cluster
+  hosts: k3s_servers
+  become: yes
+  vars:
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
+
+  tasks:
+    - name: Install Python Kubernetes library
+      apt:
+        name: python3-kubernetes
+        state: present
+
+    - name: Create namespaces
+      kubernetes.core.k8s:
+        name: "{{ item }}"
+        api_version: v1
+        kind: Namespace
+        state: present
+        kubeconfig: "{{ kubeconfig }}"
+      loop:
+        - ingress-nginx
+        - cert-manager
+        - external-dns
+        - external-secrets
+
+    - name: Install Ingress NGINX
+      kubernetes.core.helm:
+        name: ingress-nginx
+        chart_ref: ingress-nginx/ingress-nginx
+        release_namespace: ingress-nginx
+        create_namespace: false
+        values:
+          controller:
+            replicaCount: 1
+            service:
+              type: LoadBalancer
+              externalIPs:
+                - 163.172.170.87
+            resources:
+              requests:
+                cpu: 100m
+                memory: 90Mi
+              limits:
+                cpu: 200m
+                memory: 180Mi
+            config:
+              use-forwarded-headers: "true"
+              compute-full-forwarded-for: "true"
+              use-proxy-protocol: "false"
+            metrics:
+              enabled: true
+              serviceMonitor:
+                enabled: false
+            admissionWebhooks:
+              enabled: false
+          defaultBackend:
+            enabled: true
+            resources:
+              requests:
+                cpu: 10m
+                memory: 20Mi
+              limits:
+                cpu: 50m
+                memory: 40Mi
+        kubeconfig: "{{ kubeconfig }}"
+        wait: true
+        wait_timeout: 600s
+
+    - name: Install Cert Manager
+      kubernetes.core.helm:
+        name: cert-manager
+        chart_ref: jetstack/cert-manager
+        release_namespace: cert-manager
+        create_namespace: false
+        values:
+          installCRDs: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          webhook:
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+          cainjector:
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+          prometheus:
+            enabled: false
+          startupapicheck:
+            enabled: false
+        kubeconfig: "{{ kubeconfig }}"
+        wait: true
+        wait_timeout: 600s
+
+    - name: Wait for Cert Manager to be ready
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        name: cert-manager
+        namespace: cert-manager
+        kubeconfig: "{{ kubeconfig }}"
+        wait_condition:
+          type: Available
+          status: "True"
+        wait_timeout: 300
+
+    - name: Install External DNS
+      kubernetes.core.helm:
+        name: external-dns
+        chart_ref: external-dns/external-dns
+        release_namespace: external-dns
+        create_namespace: false
+        values:
+          provider: scaleway
+          sources:
+            - ingress
+            - service
+          domainFilters:
+            - keltio.fr
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 50m
+              memory: 64Mi
+          logLevel: info
+          logFormat: text
+          interval: 1m
+          policy: sync
+          txtOwnerId: "k3s-migration"
+          registry: txt
+          txtPrefix: "external-dns-"
+        kubeconfig: "{{ kubeconfig }}"
+        wait: true
+        wait_timeout: 600s
+
+    - name: Install External Secrets
+      kubernetes.core.helm:
+        name: external-secrets
+        chart_ref: external-secrets/external-secrets
+        release_namespace: external-secrets
+        create_namespace: false
+        values:
+          installCRDs: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          webhook:
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 50m
+                memory: 64Mi
+          certController:
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 50m
+                memory: 64Mi
+          serviceMonitor:
+            enabled: false
+          metrics:
+            service:
+              enabled: false
+        kubeconfig: "{{ kubeconfig }}"
+        wait: true
+        wait_timeout: 600s
+
+    - name: Create ClusterIssuer for Let's Encrypt
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: cert-manager.io/v1
+          kind: ClusterIssuer
+          metadata:
+            name: letsencrypt-prod
+          spec:
+            acme:
+              server: https://acme-v02.api.letsencrypt.org/directory
+              email: admin@keltio.fr  # Change this to your email
+              privateKeySecretRef:
+                name: letsencrypt-prod
+              solvers:
+              - http01:
+                  ingress:
+                    class: nginx
+        kubeconfig: "{{ kubeconfig }}"
+
+    - name: Display installation status
+      debug:
+        msg:
+          - "All Helm charts installed successfully!"
+          - "Components installed:"
+          - "  - Ingress NGINX (ingress-nginx namespace)"
+          - "  - Cert Manager (cert-manager namespace)"
+          - "  - External DNS (external-dns namespace)"
+          - "  - External Secrets (external-secrets namespace)"
+          - "ClusterIssuer 'letsencrypt-prod' created for SSL certificates"

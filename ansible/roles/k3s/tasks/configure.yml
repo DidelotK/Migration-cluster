@@ -1,0 +1,112 @@
+---
+# Configuration de K3s
+
+- name: "Configuration des permissions du kubeconfig"
+  file:
+    path: "{{ k3s_config_file }}"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: "Création du répertoire kube pour root"
+  file:
+    path: /root/.kube
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+
+- name: "Création d'un lien symbolique vers le kubeconfig"
+  file:
+    src: "{{ k3s_config_file }}"
+    dest: /root/.kube/config
+    state: link
+    force: true
+  become: true
+
+- name: "Configuration de l'environnement K3s"
+  lineinfile:
+    path: /etc/environment
+    line: "{{ item }}"
+    create: true
+  loop:
+  - "KUBECONFIG={{ k3s_config_file }}"
+  - "K3S_DATA_DIR={{ k3s_server_location }}"
+  become: true
+
+- name: "Ajout des alias kubectl dans bashrc"
+  lineinfile:
+    path: /root/.bashrc
+    line: "{{ item }}"
+    create: true
+  loop:
+  - "alias k='kubectl'"
+  - "alias kubectl='k3s kubectl'"
+  - "export KUBECONFIG={{ k3s_config_file }}"
+  - "source <(kubectl completion bash)"
+  - "complete -F __start_kubectl k"
+  become: true
+
+- name: "Configuration du profile système"
+  copy:
+    dest: /etc/profile.d/k3s.sh
+    content: |
+      #!/bin/bash
+      export KUBECONFIG={{ k3s_config_file }}
+      export K3S_DATA_DIR={{ k3s_server_location }}
+      alias k='kubectl'
+      alias kubectl='k3s kubectl'
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: "Configuration de la rotation des logs"
+  copy:
+    dest: /etc/logrotate.d/k3s
+    content: |
+      /var/log/k3s.log {
+          daily
+          missingok
+          rotate 7
+          compress
+          delaycompress
+          notifempty
+          create 644 root root
+          postrotate
+              systemctl reload k3s || true
+          endscript
+      }
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: "Création du répertoire systemd pour K3s"
+  file:
+    path: /etc/systemd/system/k3s.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+
+- name: "Configuration des limites systemd pour K3s"
+  copy:
+    dest: /etc/systemd/system/k3s.service.d/limits.conf
+    content: |
+      [Service]
+      LimitNOFILE=65536
+      LimitNPROC=65536
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  notify: restart k3s
+
+- name: "Rechargement de systemd"
+  systemd:
+    daemon_reload: true
+  become: true

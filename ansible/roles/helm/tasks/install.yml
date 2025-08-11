@@ -1,0 +1,77 @@
+---
+# Installation de Helm
+
+- name: "Vérification si Helm est déjà installé"
+  command: which helm
+  register: helm_installed
+  ignore_errors: true
+  changed_when: false
+
+- name: "Récupération de la version installée de Helm"
+  command: helm version --short --client
+  register: helm_current_version
+  ignore_errors: true
+  changed_when: false
+  when: helm_installed.rc == 0
+
+- name: "Affichage de la version actuelle"
+  debug:
+    msg: "Version Helm installée: {{ helm_current_version.stdout }}"
+  when: helm_installed.rc == 0 and helm_current_version.rc == 0
+
+- name: "Création du répertoire temporaire"
+  file:
+    path: "{{ helm_temp_dir }}"
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: "Téléchargement de Helm"
+  get_url:
+    url: "{{ helm_url }}"
+    dest: "{{ helm_temp_dir }}/helm.tar.gz"
+    mode: '0644'
+    timeout: 120
+  become: true
+  when: helm_installed.rc != 0 or (helm_current_version.stdout is defined and helm_version not in helm_current_version.stdout)
+
+- name: "Extraction de Helm"
+  unarchive:
+    src: "{{ helm_temp_dir }}/helm.tar.gz"
+    dest: "{{ helm_temp_dir }}"
+    remote_src: true
+    creates: "{{ helm_temp_dir }}/{{ helm_platform }}/helm"
+  become: true
+  when: helm_installed.rc != 0 or (helm_current_version.stdout is defined and helm_version not in helm_current_version.stdout)
+
+- name: "Installation du binaire Helm"
+  copy:
+    src: "{{ helm_temp_dir }}/{{ helm_platform }}/helm"
+    dest: "{{ helm_install_dir }}/helm"
+    mode: '0755'
+    remote_src: true
+  become: true
+  when: helm_installed.rc != 0 or (helm_current_version.stdout is defined and helm_version not in helm_current_version.stdout)
+
+- name: "Vérification de l'installation de Helm"
+  command: helm version --short
+  register: helm_install_check
+  changed_when: false
+
+- name: "Affichage de la version installée"
+  debug:
+    msg: "{{ helm_install_check.stdout }}"
+
+- name: "Nettoyage des fichiers temporaires"
+  file:
+    path: "{{ helm_temp_dir }}"
+    state: absent
+  become: true
+
+- name: "Configuration des permissions"
+  file:
+    path: "{{ helm_install_dir }}/helm"
+    owner: root
+    group: root
+    mode: '0755'
+  become: true

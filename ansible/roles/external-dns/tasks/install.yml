@@ -1,0 +1,75 @@
+---
+# Installation d'External DNS
+
+- name: "🔑 Création du secret Scaleway pour External DNS"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: scaleway-credentials
+        namespace: external-dns
+      type: Opaque
+      data:
+        SCW_ACCESS_KEY: "{{ scaleway_access_key | b64encode }}"
+        SCW_SECRET_KEY: "{{ scaleway_secret_key | b64encode }}"
+        SCW_DEFAULT_ORGANIZATION_ID: "{{ scaleway_organization_id | b64encode }}"
+        SCW_DEFAULT_PROJECT_ID: "{{ scaleway_project_id | b64encode }}"
+    state: present
+
+- name: "🔍 Vérification si External DNS est déjà installé"
+  shell: helm list -n external-dns | grep external-dns
+  register: external_dns_installed
+  failed_when: false
+  changed_when: false
+
+- name: "📥 Installation d'External DNS via Helm"
+  shell: |
+    helm install external-dns external-dns/external-dns \
+      --namespace external-dns \
+      --create-namespace \
+      --set provider=scaleway \
+      --set sources[0]=ingress \
+      --set sources[1]=service \
+      --set env[0].name=SCW_ACCESS_KEY \
+      --set env[0].valueFrom.secretKeyRef.name=scaleway-credentials \
+      --set env[0].valueFrom.secretKeyRef.key=SCW_ACCESS_KEY \
+      --set env[1].name=SCW_SECRET_KEY \
+      --set env[1].valueFrom.secretKeyRef.name=scaleway-credentials \
+      --set env[1].valueFrom.secretKeyRef.key=SCW_SECRET_KEY \
+      --set env[2].name=SCW_DEFAULT_ORGANIZATION_ID \
+      --set env[2].valueFrom.secretKeyRef.name=scaleway-credentials \
+      --set env[2].valueFrom.secretKeyRef.key=SCW_DEFAULT_ORGANIZATION_ID \
+      --set env[3].name=SCW_DEFAULT_PROJECT_ID \
+      --set env[3].valueFrom.secretKeyRef.name=scaleway-credentials \
+      --set env[3].valueFrom.secretKeyRef.key=SCW_DEFAULT_PROJECT_ID \
+      --set domainFilters[0]=keltio.fr \
+      --set policy=sync \
+      --set txtOwnerId=k3s-migration-cluster \
+      --set logLevel=info \
+      --wait --timeout=300s
+  when: external_dns_installed.rc != 0
+  register: external_dns_install_result
+
+- name: "⏳ Attente que le pod External DNS soit prêt"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: external-dns
+    label_selectors:
+    - app.kubernetes.io/name=external-dns
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 300
+  when: external_dns_installed.rc != 0
+
+- name: "📊 Affichage des informations d'installation"
+  debug:
+    msg: |
+      🎉 External DNS installé avec succès!
+      - Provider: Scaleway
+      - Domain filters: keltio.fr
+      - Sources: ingress, service
+      - Policy: sync

@@ -1,0 +1,32 @@
+---
+# Playbook pour l'installation du cœur K3s
+- name: "🚀 Installation du cœur K3s"
+  hosts: k3s_servers
+  become: true
+  gather_facts: true
+
+  roles:
+  - role: k3s
+    tags: [ k3s ]
+
+  - role: helm
+    tags: [ helm ]
+
+  post_tasks:
+  - name: "✅ Installation K3s terminée"
+    debug:
+      msg: |
+        🎉 Cœur K3s installé avec succès!
+
+        📊 Cluster K3s:
+        - Version: {{ k3s_version }}
+        - Nœuds: {{ groups['k3s_servers'] | length }}
+        - API: https://{{ ansible_default_ipv4.address }}:6443
+
+        🛠️  Outils installés:
+        - kubectl (via k3s)
+        - Helm {{ helm_version }}
+
+        🔑 Kubeconfig: {{ k3s_config_file }}
+
+        🚀 Prêt pour les composants additionnels!

@@ -1,0 +1,14 @@
+---
+# Tâches principales pour le déploiement des applications
+
+- name: "📋 Vérification des prérequis des applications"
+  include_tasks: prerequisites.yml
+  tags: [ applications, prerequisites ]
+
+- name: "🚀 Déploiement de l'application Nginx test"
+  include_tasks: nginx-test.yml
+  tags: [ applications, nginx-test ]
+
+- name: "✅ Validation des applications"
+  include_tasks: validate.yml
+  tags: [ applications, validate ]

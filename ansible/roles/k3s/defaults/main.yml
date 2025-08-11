@@ -1,0 +1,46 @@
+---
+# Defaults pour le rôle K3s
+
+# Version de K3s
+k3s_version: "v1.28.5+k3s1"
+k3s_url: "https://get.k3s.io"
+
+# Configuration du serveur K3s
+k3s_server_location: "/var/lib/rancher/k3s"
+k3s_config_file: "/etc/rancher/k3s/k3s.yaml"
+k3s_token_file: "/var/lib/rancher/k3s/server/node-token"
+k3s_service_file: "/etc/systemd/system/k3s.service"
+
+# Arguments par défaut du serveur K3s
+k3s_server_args:
+- "--write-kubeconfig-mode=644"
+- "--disable=traefik"
+- "--disable=servicelb"
+- "--disable-cloud-controller"
+- "--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%"
+- "--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%"
+
+# Configuration réseau
+k3s_pod_cidr: "10.42.0.0/16"
+k3s_service_cidr: "10.43.0.0/16"
+k3s_cluster_dns: "10.43.0.10"
+
+# Configuration de performance
+k3s_max_pods_per_node: 110
+k3s_node_port_range: "30000-32767"
+
+# Configuration de logging
+k3s_log_level: "info"
+k3s_audit_log_enabled: false
+
+# Timeout pour l'installation
+k3s_install_timeout: 300
+
+# Configuration du kubeconfig local
+local_kubeconfig_path: "{{ ansible_env.HOME }}/.kube"
+local_kubeconfig_file: "{{ local_kubeconfig_path }}/k3s.yaml"
+
+# Validation
+k3s_validate_certs: true
+k3s_wait_for_nodes: true
+k3s_wait_timeout: 600

@@ -1,0 +1,219 @@
+---
+# Déploiement de l'application Nginx test
+
+- name: "📁 Création du namespace nginx-test"
+  kubernetes.core.k8s:
+    name: nginx-test
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: "🖥️ Déploiement de l'application Nginx test"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: nginx-test
+        namespace: nginx-test
+        labels:
+          app: nginx-test
+      spec:
+        replicas: 2
+        selector:
+          matchLabels:
+            app: nginx-test
+        template:
+          metadata:
+            labels:
+              app: nginx-test
+          spec:
+            containers:
+            - name: nginx
+              image: nginx:1.25-alpine
+              ports:
+              - containerPort: 80
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+              volumeMounts:
+              - name: nginx-config
+                mountPath: /usr/share/nginx/html/index.html
+                subPath: index.html
+            volumes:
+            - name: nginx-config
+              configMap:
+                name: nginx-test-config
+    state: present
+
+- name: "📄 Création de la ConfigMap pour le contenu HTML"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: nginx-test-config
+        namespace: nginx-test
+      data:
+        index.html: |
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>🚀 K3s Migration - Test Nginx</title>
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                      margin: 0;
+                      padding: 0;
+                      min-height: 100vh;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                  }
+                  .container {
+                      text-align: center;
+                      background: rgba(255, 255, 255, 0.1);
+                      padding: 3rem;
+                      border-radius: 20px;
+                      backdrop-filter: blur(10px);
+                      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                      border: 1px solid rgba(255, 255, 255, 0.2);
+                  }
+                  h1 {
+                      font-size: 3rem;
+                      margin-bottom: 1rem;
+                      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+                  }
+                  .status {
+                      font-size: 1.5rem;
+                      margin: 2rem 0;
+                      padding: 1rem;
+                      background: rgba(76, 175, 80, 0.3);
+                      border-radius: 10px;
+                      border: 1px solid rgba(76, 175, 80, 0.5);
+                  }
+                  .info {
+                      font-size: 1.1rem;
+                      margin: 1rem 0;
+                      opacity: 0.9;
+                  }
+                  .badge {
+                      display: inline-block;
+                      background: rgba(255, 255, 255, 0.2);
+                      padding: 0.5rem 1rem;
+                      border-radius: 20px;
+                      margin: 0.5rem;
+                      font-size: 0.9rem;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>🚀 K3s Migration</h1>
+                  <div class="status">
+                      ✅ Déploiement réussi !
+                  </div>
+                  <div class="info">
+                      <strong>nginx.keltio.fr</strong> est maintenant opérationnel
+                  </div>
+                  <div>
+                      <span class="badge">🏗️ Terraform</span>
+                      <span class="badge">⚙️ Ansible</span>
+                      <span class="badge">☸️ K3s</span>
+                      <span class="badge">🔧 Nginx Ingress</span>
+                      <span class="badge">🔐 Cert Manager</span>
+                      <span class="badge">🌐 External DNS</span>
+                  </div>
+                  <div class="info" style="margin-top: 2rem;">
+                      <small>Scaleway GP1-XS • Cluster K3s • Prêt pour la production</small>
+                  </div>
+              </div>
+          </body>
+          </html>
+    state: present
+
+- name: "🌐 Création du service pour Nginx test"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: nginx-test-service
+        namespace: nginx-test
+      spec:
+        selector:
+          app: nginx-test
+        ports:
+        - port: 80
+          targetPort: 80
+        type: ClusterIP
+    state: present
+
+- name: "🔗 Création de l'Ingress pour nginx.keltio.fr"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: nginx-test-ingress
+        namespace: nginx-test
+        annotations:
+          kubernetes.io/ingress.class: "nginx"
+          cert-manager.io/cluster-issuer: "letsencrypt-prod"
+          external-dns.alpha.kubernetes.io/hostname: "nginx.keltio.fr"
+          external-dns.alpha.kubernetes.io/ttl: "300"
+          nginx.ingress.kubernetes.io/ssl-redirect: "true"
+          nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      spec:
+        tls:
+        - hosts:
+          - nginx.keltio.fr
+          secretName: nginx-test-tls
+        rules:
+        - host: nginx.keltio.fr
+          http:
+            paths:
+            - path: /
+              pathType: Prefix
+              backend:
+                service:
+                  name: nginx-test-service
+                  port:
+                    number: 80
+    state: present
+
+- name: "⏳ Attente que les pods Nginx test soient prêts"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: nginx-test
+    label_selectors:
+    - app=nginx-test
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 300
+
+- name: "📊 Affichage des informations de déploiement"
+  debug:
+    msg: |
+      🎉 Application Nginx test déployée avec succès!
+
+      🌐 URL: https://nginx.keltio.fr
+      📁 Namespace: nginx-test
+      🔐 Certificat SSL: Automatique via Let's Encrypt
+      🌍 DNS: Automatique via External DNS
+
+      ⚙️ Configuration:
+      - 2 réplicas pour la haute disponibilité
+      - SSL automatique avec redirection forcée
+      - TTL DNS: 300 secondes

@@ -1,0 +1,62 @@
+# =============================================================================
+# Exemple de configuration Terraform pour l'environnement dev
+# =============================================================================
+# Copier ce fichier vers terraform.tfvars et remplir avec vos vraies valeurs
+
+# ----- Credentials Scaleway -----
+# Récupérer depuis : https://console.scaleway.com/project/credentials
+scw_access_key       = "SCWXXXXXXXXXXXXXXXXX"  # Votre clé d'accès Scaleway
+scw_secret_key       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Votre clé secrète
+scw_organization_id  = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # ID organisation
+scw_project_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # ID projet
+
+# ----- Configuration VM -----
+instance_name = "k3s-migration-dev"    # Nom de la VM
+instance_type = "GP1-XS"               # Type d'instance (GP1-XS = 4 vCPU, 16GB RAM)
+zone          = "fr-par-1"             # Zone Scaleway
+
+# ----- Configuration réseau -----
+create_public_ip   = true              # Créer une IP publique
+enable_dynamic_ip  = false             # Utiliser IP dynamique (false = IP fixe)
+
+# ----- Configuration stockage -----
+root_volume_size = 30                  # Taille du disque en GB
+root_volume_type = "l_ssd"             # Type de stockage (l_ssd recommandé)
+
+# ----- Configuration SSH -----
+create_ssh_key   = true                # Générer automatiquement les clés SSH
+ssh_key_name     = "k3s-migration-dev" # Nom de la clé SSH
+
+# ----- Configuration système -----
+timezone = "Europe/Paris"              # Fuseau horaire
+packages = [                           # Packages à installer
+  "curl",
+  "wget", 
+  "git",
+  "unzip",
+  "htop",
+  "tree",
+  "jq",
+  "vim",
+  "python3",
+  "python3-pip",
+  "python3-kubernetes"
+]
+
+# ----- Tags -----
+default_tags = [
+  "k3s",
+  "migration", 
+  "terraform",
+  "dev"
+]
+
+additional_tags = [
+  "cost-optimization",
+  "automation"
+]
+
+# ----- Versions des outils -----
+k3s_version     = "v1.28.5+k3s1"       # Version K3s
+kubectl_version = "v1.28.5"            # Version kubectl
+helm_version    = "v3.13.3"            # Version Helm

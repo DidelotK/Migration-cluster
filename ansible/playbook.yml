@@ -1,0 +1,126 @@
+---
+- name: Install and configure K3s cluster
+  hosts: k3s_servers
+  become: yes
+  vars:
+    k3s_version: v1.28.5+k3s1
+    k3s_server_location: /var/lib/rancher/k3s
+    k3s_config_file: /etc/rancher/k3s/k3s.yaml
+    k3s_token: "{{ ansible_hostname }}_{{ ansible_date_time.epoch }}"
+
+  tasks:
+    - name: Update package cache
+      apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - curl
+          - wget
+          - git
+          - unzip
+          - software-properties-common
+        state: present
+
+    - name: Create k3s config directory
+      file:
+        path: /etc/rancher/k3s
+        state: directory
+        mode: '0755'
+
+    - name: Create k3s config file
+      copy:
+        content: |
+          write-kubeconfig-mode: "0644"
+          cluster-init: true
+          disable:
+            - traefik
+          node-label:
+            - "node-type=master"
+        dest: /etc/rancher/k3s/config.yaml
+        mode: '0644'
+
+    - name: Download and install K3s
+      shell: |
+        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} sh -s - server \
+          --cluster-init \
+          --disable traefik \
+          --write-kubeconfig-mode 644
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Wait for K3s to be ready
+      wait_for:
+        port: 6443
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 30
+        timeout: 300
+
+    - name: Get K3s token
+      slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: k3s_token_b64
+
+    - name: Set K3s token fact
+      set_fact:
+        k3s_token: "{{ k3s_token_b64.content | b64decode | trim }}"
+
+    - name: Get kubeconfig
+      slurp:
+        src: /etc/rancher/k3s/k3s.yaml
+      register: kubeconfig_b64
+
+    - name: Create local kubeconfig directory
+      file:
+        path: ~/.kube
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      become: no
+
+    - name: Save kubeconfig locally
+      copy:
+        content: "{{ kubeconfig_b64.content | b64decode | regex_replace('127.0.0.1', ansible_default_ipv4.address) }}"
+        dest: "{{ playbook_dir }}/../.kube/k3s.yaml"
+        mode: '0600'
+      delegate_to: localhost
+      become: no
+
+    - name: Install Helm
+      shell: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      args:
+        creates: /usr/local/bin/helm
+
+    - name: Add Helm repositories
+      kubernetes.core.helm_repository:
+        name: "{{ item.name }}"
+        repo_url: "{{ item.url }}"
+      loop:
+        - { name: "ingress-nginx", url: "https://kubernetes.github.io/ingress-nginx" }
+        - { name: "jetstack", url: "https://charts.jetstack.io" }
+        - { name: "external-dns", url: "https://kubernetes-sigs.github.io/external-dns/" }
+        - { name: "external-secrets", url: "https://charts.external-secrets.io" }
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Update Helm repositories
+      kubernetes.core.helm:
+        name: dummy
+        chart_ref: dummy
+        release_namespace: dummy
+        state: absent
+        update_repo_cache: yes
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      ignore_errors: yes
+
+    - name: Display cluster info
+      debug:
+        msg:
+          - "K3s cluster is ready!"
+          - "Server IP: {{ ansible_default_ipv4.address }}"
+          - "K3s Token: {{ k3s_token }}"
+          - "Kubeconfig saved to: {{ playbook_dir }}/../.kube/k3s.yaml"
+          - "To use kubectl: export KUBECONFIG={{ playbook_dir }}/../.kube/k3s.yaml"

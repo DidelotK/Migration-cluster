@@ -1,0 +1,33 @@
+---
+# Defaults pour le rôle Helm
+
+# Version de Helm
+helm_version: "v3.13.3"
+helm_platform: "linux-amd64"
+helm_url: "https://get.helm.sh/helm-{{ helm_version }}-{{ helm_platform }}.tar.gz"
+
+# Installation
+helm_install_dir: "/usr/local/bin"
+helm_temp_dir: "/tmp/helm"
+
+# Repositories Helm par défaut
+helm_repositories:
+- name: ingress-nginx
+  url: https://kubernetes.github.io/ingress-nginx
+- name: jetstack
+  url: https://charts.jetstack.io
+- name: external-dns
+  url: https://kubernetes-sigs.github.io/external-dns/
+- name: external-secrets
+  url: https://charts.external-secrets.io
+- name: bitnami
+  url: https://charts.bitnami.com/bitnami
+
+# Configuration
+helm_create_namespace: true
+helm_wait: true
+helm_wait_timeout: "600s"
+helm_force_update: false
+
+# Validation
+helm_validate_install: true

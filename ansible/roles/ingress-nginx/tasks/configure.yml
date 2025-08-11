@@ -1,0 +1,35 @@
+---
+# Configuration d'Ingress Nginx
+
+- name: "⚙️ Création de la ConfigMap pour Ingress Nginx"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: ingress-nginx-controller
+        namespace: ingress-nginx
+        labels:
+          app.kubernetes.io/name: ingress-nginx
+          app.kubernetes.io/part-of: ingress-nginx
+      data:
+        # Configuration pour améliorer les performances
+        use-forwarded-headers: "true"
+        compute-full-forwarded-for: "true"
+        use-proxy-protocol: "false"
+        # Taille maximale des uploads
+        proxy-body-size: "100m"
+        # Timeout configurations
+        proxy-connect-timeout: "15"
+        proxy-send-timeout: "600"
+        proxy-read-timeout: "600"
+        # SSL et sécurité
+        ssl-protocols: "TLSv1.2 TLSv1.3"
+        ssl-redirect: "true"
+        force-ssl-redirect: "true"
+    state: present
+
+- name: "🔧 Application de la configuration"
+  shell: kubectl rollout restart daemonset/ingress-nginx-controller -n ingress-nginx
+  register: restart_result
+  changed_when: "'restarted' in restart_result.stdout"

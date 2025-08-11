@@ -1,0 +1,43 @@
+---
+# Installation de Cert Manager
+
+- name: "🔍 Vérification si Cert Manager est déjà installé"
+  shell: helm list -n cert-manager | grep cert-manager
+  register: cert_manager_installed
+  failed_when: false
+  changed_when: false
+
+- name: "📥 Installation de Cert Manager via Helm"
+  shell: |
+    helm install cert-manager jetstack/cert-manager \
+      --namespace cert-manager \
+      --create-namespace \
+      --version v1.13.3 \
+      --set installCRDs=true \
+      --set global.leaderElection.namespace=cert-manager \
+      --set extraArgs={--enable-certificate-owner-ref=true} \
+      --wait --timeout=300s
+  when: cert_manager_installed.rc != 0
+  register: cert_manager_install_result
+
+- name: "⏳ Attente que tous les pods Cert Manager soient prêts"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: cert-manager
+    label_selectors:
+    - app.kubernetes.io/instance=cert-manager
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 300
+  when: cert_manager_installed.rc != 0
+
+- name: "📊 Affichage des informations d'installation"
+  debug:
+    msg: |
+      🎉 Cert Manager installé avec succès!
+      - Version: v1.13.3
+      - Namespace: cert-manager
+      - CRDs installés: Oui

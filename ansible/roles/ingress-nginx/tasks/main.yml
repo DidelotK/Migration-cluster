@@ -1,0 +1,18 @@
+---
+# Tâches principales pour l'installation d'Ingress Nginx
+
+- name: "📋 Vérification des prérequis Ingress Nginx"
+  include_tasks: prerequisites.yml
+  tags: [ ingress-nginx, prerequisites ]
+
+- name: "🚀 Installation d'Ingress Nginx"
+  include_tasks: install.yml
+  tags: [ ingress-nginx, install ]
+
+- name: "⚙️ Configuration d'Ingress Nginx"
+  include_tasks: configure.yml
+  tags: [ ingress-nginx, configure ]
+
+- name: "✅ Validation d'Ingress Nginx"
+  include_tasks: validate.yml
+  tags: [ ingress-nginx, validate ]

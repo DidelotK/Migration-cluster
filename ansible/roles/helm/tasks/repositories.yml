@@ -1,0 +1,31 @@
+---
+# Configuration des repositories Helm
+
+- name: "Ajout des repositories Helm"
+  kubernetes.core.helm_repository:
+    name: "{{ item.name }}"
+    repo_url: "{{ item.url }}"
+    state: present
+  loop: "{{ helm_repositories }}"
+  environment:
+    KUBECONFIG: "{{ k3s_config_file | default('/etc/rancher/k3s/k3s.yaml') }}"
+  become: true
+
+- name: "Mise à jour des repositories Helm"
+  command: helm repo update
+  environment:
+    KUBECONFIG: "{{ k3s_config_file | default('/etc/rancher/k3s/k3s.yaml') }}"
+  become: true
+  changed_when: true
+
+- name: "Liste des repositories configurés"
+  command: helm repo list
+  register: helm_repo_list
+  environment:
+    KUBECONFIG: "{{ k3s_config_file | default('/etc/rancher/k3s/k3s.yaml') }}"
+  become: true
+  changed_when: false
+
+- name: "Affichage des repositories Helm"
+  debug:
+    msg: "{{ helm_repo_list.stdout_lines }}"

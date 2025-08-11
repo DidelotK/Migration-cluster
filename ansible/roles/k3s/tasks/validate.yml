@@ -1,0 +1,131 @@
+---
+# Validation de l'installation K3s
+
+- name: "Vérification que K3s est en cours d'exécution"
+  systemd:
+    name: k3s
+  register: k3s_service_check
+  become: true
+
+- name: "Assert que le service K3s est actif"
+  assert:
+    that:
+    - k3s_service_check.status.ActiveState == "active"
+    - k3s_service_check.status.SubState == "running"
+    fail_msg: "Le service K3s n'est pas en cours d'exécution"
+    success_msg: "Le service K3s est actif et en cours d'exécution"
+
+- name: "Vérification de la connectivité à l'API Kubernetes"
+  wait_for:
+    host: "{{ ansible_default_ipv4.address }}"
+    port: 6443
+    timeout: 30
+    delay: 5
+    state: started
+  register: k3s_api_port
+
+- name: "Vérification des nœuds du cluster"
+  k8s_info:
+    api_version: v1
+    kind: Node
+    kubeconfig: "{{ k3s_config_file }}"
+  register: cluster_nodes
+  become: true
+
+- name: "Affichage des nœuds du cluster"
+  debug:
+    msg: |
+      Nœuds du cluster:
+      {% for node in cluster_nodes.resources %}
+      - {{ node.metadata.name }}: {{ node.status.conditions | selectattr('type', 'equalto', 'Ready') | map(attribute='status') | first }}
+      {% endfor %}
+
+- name: "Vérification que tous les nœuds sont Ready"
+  assert:
+    that:
+    - cluster_nodes.resources | length > 0
+    - cluster_nodes.resources | selectattr('status.conditions', 'defined') | selectattr('status.conditions', 'selectattr', 'type', 'equalto', 'Ready') | selectattr('status.conditions', 'selectattr', 'status', 'equalto', 'True') | list | length == cluster_nodes.resources | length
+    fail_msg: "Tous les nœuds ne sont pas dans l'état Ready"
+    success_msg: "Tous les nœuds du cluster sont Ready"
+
+- name: "Vérification des composants système"
+  k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: kube-system
+    kubeconfig: "{{ k3s_config_file }}"
+  register: system_pods
+  become: true
+
+- name: "Vérification que les pods système sont en cours d'exécution"
+  assert:
+    that:
+    - system_pods.resources | length > 0
+    - system_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length > 0
+    fail_msg: "Aucun pod système n'est en cours d'exécution"
+    success_msg: "Les pods système sont en cours d'exécution"
+
+- name: "Test de création d'un pod de test"
+  k8s:
+    state: present
+    kubeconfig: "{{ k3s_config_file }}"
+    definition:
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: k3s-test-pod
+        namespace: default
+        labels:
+          app: k3s-test
+      spec:
+        containers:
+        - name: test
+          image: alpine:latest
+          command: [ 'sleep', '30' ]
+        restartPolicy: Never
+  become: true
+  register: test_pod_creation
+
+- name: "Attente que le pod de test soit prêt"
+  k8s_info:
+    api_version: v1
+    kind: Pod
+    name: k3s-test-pod
+    namespace: default
+    kubeconfig: "{{ k3s_config_file }}"
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 60
+  become: true
+
+- name: "Suppression du pod de test"
+  k8s:
+    state: absent
+    api_version: v1
+    kind: Pod
+    name: k3s-test-pod
+    namespace: default
+    kubeconfig: "{{ k3s_config_file }}"
+  become: true
+
+- name: "Récupération des informations du cluster"
+  command: k3s kubectl cluster-info
+  register: cluster_info
+  become: true
+  changed_when: false
+
+- name: "Affichage des informations du cluster"
+  debug:
+    msg: "{{ cluster_info.stdout_lines }}"
+
+- name: "Test final: version de Kubernetes"
+  command: k3s kubectl version --short
+  register: k8s_version
+  become: true
+  changed_when: false
+
+- name: "Affichage de la version Kubernetes"
+  debug:
+    msg: "{{ k8s_version.stdout_lines }}"

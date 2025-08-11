@@ -1,0 +1,172 @@
+# =============================================================================
+# GitIgnore pour K3s Migration Cluster
+# =============================================================================
+
+# ----- Terraform -----
+# State files
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Exclude all .tfvars files, which are likely to contain sensitive data
+# Exception: terraform.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Include override files you do wish to add to version control using negated pattern
+# !example_override.tf
+
+# Terraform CLI configuration files
+.terraformrc
+terraform.rc
+
+# Terraform lock files
+.terraform.lock.hcl
+.terraform/
+
+# Terraform plans
+*.tfplan
+*.tfplan.*
+
+# ----- SSH Keys -----
+# SSH private keys (keep public keys for reference)
+ssh-keys/*
+!ssh-keys/.gitkeep
+!ssh-keys/*.pub
+
+# ----- Ansible -----
+# Ansible retry files
+*.retry
+
+# Ansible vault files
+ansible-vault.yml
+vault-pass.txt
+
+# Dynamic inventories
+inventories/*/hosts.yml
+inventories/*/hosts.yaml
+
+# Group vars with sensitive data (keep examples)
+group_vars/*/vault.yml
+group_vars/*/secrets.yml
+
+# ----- Kubernetes -----
+# kubeconfig files
+kubeconfig
+kubeconfig.*
+*.kubeconfig
+.kube/
+
+# Kubernetes secrets
+*secret*.yaml
+*-secret.yaml
+
+# ----- Logs -----
+# Application logs
+*.log
+logs/
+ansible.log
+
+# ----- OS generated files -----
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Linux
+*~
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ----- IDE/Editor -----
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ----- Temporary files -----
+# Temporary directories
+tmp/
+temp/
+.tmp/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# ----- Security -----
+# Environment files with secrets
+.env
+.env.*
+!.env.example
+
+# Certificate files
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# API keys and tokens
+*api-key*
+*token*
+*credential*
+
+# ----- Application specific -----
+# Helm charts dependencies
+charts/*/charts/
+charts/*/Chart.lock
+
+# Monitoring
+monitoring/grafana/data/
+monitoring/prometheus/data/
+
+# Scaleway config
+.scwrc
+scw.config
+
+# MinIO credentials
+.minio_*
+
+# ----- Custom ignores -----
+# Add any project-specific ignores here

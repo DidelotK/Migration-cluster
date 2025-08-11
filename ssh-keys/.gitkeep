@@ -1,0 +1,2 @@
+# Ce dossier contient les clés SSH générées automatiquement par Terraform
+# Les clés privées sont ignorées par .gitignore pour la sécurité

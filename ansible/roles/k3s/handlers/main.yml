@@ -1,0 +1,27 @@
+---
+# Handlers pour le rôle K3s
+
+- name: restart k3s
+  systemd:
+    name: k3s
+    state: restarted
+    daemon_reload: true
+  become: true
+
+- name: reload k3s
+  systemd:
+    name: k3s
+    state: reloaded
+  become: true
+
+- name: stop k3s
+  systemd:
+    name: k3s
+    state: stopped
+  become: true
+
+- name: start k3s
+  systemd:
+    name: k3s
+    state: started
+  become: true

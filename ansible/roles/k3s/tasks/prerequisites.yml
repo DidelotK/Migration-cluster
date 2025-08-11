@@ -1,0 +1,124 @@
+---
+# Prérequis pour K3s
+
+- name: "Mise à jour du cache des packages"
+  apt:
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: "Installation des packages requis"
+  apt:
+    name:
+    - curl
+    - wget
+    - git
+    - unzip
+    - python3
+    - python3-pip
+    - python3-kubernetes
+    - jq
+    - htop
+    - tree
+    state: present
+  become: true
+
+- name: "Vérification de la disponibilité de la mémoire"
+  assert:
+    that:
+    - ansible_memtotal_mb >= 512
+    fail_msg: "Au moins 512MB de RAM sont requis pour K3s"
+    success_msg: "Mémoire suffisante détectée: {{ ansible_memtotal_mb }}MB"
+
+- name: "Vérification de l'espace disque"
+  assert:
+    that:
+    - item.size_available > 2147483648 # 2GB en bytes
+    fail_msg: "Au moins 2GB d'espace libre requis sur {{ item.mount }}"
+    success_msg: "Espace disque suffisant sur {{ item.mount }}"
+  loop: "{{ ansible_mounts }}"
+  when: item.mount == "/"
+
+- name: "Désactivation du swap"
+  command: swapoff -a
+  become: true
+  ignore_errors: true
+
+- name: "Suppression permanente du swap du fstab"
+  replace:
+    path: /etc/fstab
+    regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+    replace: '# \1'
+  become: true
+
+- name: "Chargement des modules kernel requis"
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+  - overlay
+  - br_netfilter
+  become: true
+
+- name: "Configuration persistante des modules kernel"
+  copy:
+    dest: /etc/modules-load.d/k3s.conf
+    content: |
+      overlay
+      br_netfilter
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: "Configuration sysctl pour K3s"
+  sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+    sysctl_file: /etc/sysctl.d/k3s.conf
+  loop:
+  - key: net.bridge.bridge-nf-call-iptables
+    value: 1
+  - key: net.bridge.bridge-nf-call-ip6tables
+    value: 1
+  - key: net.ipv4.ip_forward
+    value: 1
+  - key: vm.max_map_count
+    value: 262144
+  become: true
+
+- name: "Création des répertoires K3s"
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+  - /etc/rancher/k3s
+  - /var/lib/rancher/k3s
+  - /opt/k3s
+  become: true
+
+- name: "Vérification que le port 6443 est libre"
+  wait_for:
+    port: 6443
+    host: "{{ ansible_default_ipv4.address }}"
+    state: stopped
+    timeout: 10
+  ignore_errors: true
+
+- name: "Configuration des limites système"
+  pam_limits:
+    domain: "*"
+    limit_type: "{{ item.type }}"
+    limit_item: "{{ item.item }}"
+    value: "{{ item.value }}"
+  loop:
+  - { type: "soft", item: "nofile", value: "65536" }
+  - { type: "hard", item: "nofile", value: "65536" }
+  - { type: "soft", item: "nproc", value: "65536" }
+  - { type: "hard", item: "nproc", value: "65536" }
+  become: true

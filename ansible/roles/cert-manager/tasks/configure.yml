@@ -1,0 +1,67 @@
+---
+# Configuration de Cert Manager
+
+- name: "🔑 Création du ClusterIssuer Let's Encrypt (production)"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      metadata:
+        name: letsencrypt-prod
+      spec:
+        acme:
+          server: https://acme-v02.api.letsencrypt.org/directory
+          email: "admin@keltio.fr" # Email pour Let's Encrypt
+          privateKeySecretRef:
+            name: letsencrypt-prod-private-key
+          solvers:
+          - http01:
+              ingress:
+                class: nginx
+    state: present
+
+- name: "🧪 Création du ClusterIssuer Let's Encrypt (staging)"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      metadata:
+        name: letsencrypt-staging
+      spec:
+        acme:
+          server: https://acme-staging-v02.api.letsencrypt.org/directory
+          email: "admin@keltio.fr"
+          privateKeySecretRef:
+            name: letsencrypt-staging-private-key
+          solvers:
+          - http01:
+              ingress:
+                class: nginx
+    state: present
+
+- name: "🔑 Création du ClusterIssuer self-signed (pour les tests)"
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      metadata:
+        name: selfsigned-issuer
+      spec:
+        selfSigned: {}
+    state: present
+
+- name: "⏳ Attente que les ClusterIssuers soient prêts"
+  kubernetes.core.k8s_info:
+    api_version: cert-manager.io/v1
+    kind: ClusterIssuer
+    name: "{{ item }}"
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 60
+  loop:
+  - letsencrypt-prod
+  - letsencrypt-staging
+  - selfsigned-issuer
+  register: cluster_issuers_status

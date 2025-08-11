@@ -1,0 +1,47 @@
+---
+# Validation d'External DNS
+
+- name: "🔍 Vérification du statut du pod External DNS"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: external-dns
+    label_selectors:
+    - app.kubernetes.io/name=external-dns
+  register: external_dns_pods
+
+- name: "📊 Validation du pod External DNS"
+  assert:
+    that:
+    - external_dns_pods.resources | length > 0
+    - external_dns_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length == external_dns_pods.resources | length
+    fail_msg: "❌ Le pod External DNS n'est pas en état Running"
+    success_msg: "✅ Le pod External DNS est en état Running"
+
+- name: "🔍 Vérification des logs External DNS"
+  shell: kubectl logs -n external-dns -l app.kubernetes.io/name=external-dns --tail=5
+  register: external_dns_logs
+  changed_when: false
+
+- name: "📋 Affichage des logs récents"
+  debug:
+    msg: |
+      📋 Logs récents d'External DNS:
+      {{ external_dns_logs.stdout | default('Aucun log disponible') }}
+
+- name: "✅ Validation complète d'External DNS"
+  debug:
+    msg: |
+      🎉 External DNS validé avec succès!
+
+      📊 Statut:
+      - Pod en cours: {{ external_dns_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length }}/{{ external_dns_pods.resources | length }}
+      - Provider: Scaleway
+      - Domaines surveillés: keltio.fr
+
+      🌐 Fonctionnalités:
+      - Synchronisation automatique des enregistrements DNS
+      - Support des Ingress et Services LoadBalancer
+      - TTL configurable par annotation
+
+      🚀 Prêt pour la gestion automatique du DNS!

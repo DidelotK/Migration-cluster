@@ -1,0 +1,18 @@
+---
+# Tâches principales pour l'installation d'External DNS
+
+- name: "📋 Vérification des prérequis External DNS"
+  include_tasks: prerequisites.yml
+  tags: [ external-dns, prerequisites ]
+
+- name: "🚀 Installation d'External DNS"
+  include_tasks: install.yml
+  tags: [ external-dns, install ]
+
+- name: "⚙️ Configuration d'External DNS"
+  include_tasks: configure.yml
+  tags: [ external-dns, configure ]
+
+- name: "✅ Validation d'External DNS"
+  include_tasks: validate.yml
+  tags: [ external-dns, validate ]

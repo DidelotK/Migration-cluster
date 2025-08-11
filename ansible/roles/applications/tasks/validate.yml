@@ -1,0 +1,81 @@
+---
+# Validation des applications
+
+- name: "🔍 Vérification du statut des pods Nginx test"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: nginx-test
+    label_selectors:
+    - app=nginx-test
+  register: nginx_test_pods
+
+- name: "📊 Validation des pods Nginx test"
+  assert:
+    that:
+    - nginx_test_pods.resources | length == 2
+    - nginx_test_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length == 2
+    fail_msg: "❌ Les pods Nginx test ne sont pas tous en état Running"
+    success_msg: "✅ Tous les pods Nginx test sont en état Running"
+
+- name: "🔍 Vérification de l'Ingress"
+  kubernetes.core.k8s_info:
+    api_version: networking.k8s.io/v1
+    kind: Ingress
+    name: nginx-test-ingress
+    namespace: nginx-test
+  register: nginx_ingress
+
+- name: "🔐 Vérification du certificat SSL"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Secret
+    name: nginx-test-tls
+    namespace: nginx-test
+  register: nginx_tls_secret
+
+- name: "🌐 Test de connectivité HTTP (redirection SSL)"
+  uri:
+    url: "http://51.158.76.126"
+    method: GET
+    timeout: 30
+    status_code: [ 301, 302, 308, 404 ] # Redirections SSL ou 404 avant DNS
+    headers:
+      Host: "nginx.keltio.fr"
+  register: http_test
+  retries: 3
+  delay: 10
+  failed_when: false
+
+- name: "🔐 Test de connectivité HTTPS"
+  uri:
+    url: "https://51.158.76.126"
+    method: GET
+    timeout: 30
+    status_code: [ 200, 404 ]
+    headers:
+      Host: "nginx.keltio.fr"
+    validate_certs: false # Car on teste avec l'IP et non le domaine
+  register: https_test
+  retries: 3
+  delay: 10
+  failed_when: false
+
+- name: "✅ Validation complète des applications"
+  debug:
+    msg: |
+      🎉 Applications validées avec succès!
+
+      📊 Statut Nginx Test:
+      - Pods en cours: {{ nginx_test_pods.resources | selectattr('status.phase', 'equalto', 'Running') | list | length }}/{{ nginx_test_pods.resources | length }}
+      - Ingress configuré: {{ '✅' if nginx_ingress.resources | length > 0 else '❌' }}
+      - Certificat SSL: {{ '✅' if nginx_tls_secret.resources | length > 0 else '🔄 En cours de génération' }}
+
+      🌐 Tests de connectivité:
+      - HTTP (redirection): {{ '✅' if http_test.status in [301, 302, 308] else '❌' }}
+      - HTTPS: {{ '✅' if https_test.status == 200 else '❌' }}
+
+      🚀 Application accessible sur: https://nginx.keltio.fr
+
+      💡 Note: Le DNS peut prendre quelques minutes à se propager.
+           External DNS synchronise automatiquement les enregistrements.

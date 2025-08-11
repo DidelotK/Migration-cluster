@@ -1,0 +1,39 @@
+---
+# Prérequis pour External DNS
+
+- name: "🔍 Vérification des variables Scaleway requises"
+  assert:
+    that:
+    - scaleway_access_key is defined and scaleway_access_key != ""
+    - scaleway_secret_key is defined and scaleway_secret_key != ""
+    - scaleway_organization_id is defined and scaleway_organization_id != ""
+    - scaleway_project_id is defined and scaleway_project_id != ""
+    fail_msg: "❌ Les credentials Scaleway sont requis: scaleway_access_key, scaleway_secret_key, scaleway_organization_id, scaleway_project_id"
+    success_msg: "✅ Credentials Scaleway configurés"
+
+- name: "🔍 Vérification que le namespace external-dns n'existe pas"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Namespace
+    name: external-dns
+  register: external_dns_namespace
+  failed_when: false
+
+- name: "📁 Création du namespace external-dns"
+  kubernetes.core.k8s:
+    name: external-dns
+    api_version: v1
+    kind: Namespace
+    state: present
+  when: external_dns_namespace.resources | length == 0
+
+- name: "🔍 Vérification que Helm peut accéder au repository"
+  shell: helm repo list | grep external-dns
+  register: external_dns_repo_check
+  failed_when: false
+  changed_when: false
+
+- name: "📦 Vérification du repository Helm external-dns"
+  fail:
+    msg: "Repository Helm external-dns non trouvé. Exécutez d'abord le rôle helm."
+  when: external_dns_repo_check.rc != 0

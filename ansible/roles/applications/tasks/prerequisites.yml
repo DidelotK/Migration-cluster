@@ -1,0 +1,37 @@
+---
+# Prérequis pour les applications
+
+- name: "🔍 Vérification qu'Ingress Nginx est installé"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Service
+    name: ingress-nginx-controller
+    namespace: ingress-nginx
+  register: ingress_nginx_service
+  failed_when: ingress_nginx_service.resources | length == 0
+
+- name: "🔍 Vérification que Cert Manager est installé"
+  kubernetes.core.k8s_info:
+    api_version: cert-manager.io/v1
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  register: cert_manager_issuer
+  failed_when: cert_manager_issuer.resources | length == 0
+
+- name: "🔍 Vérification qu'External DNS est installé"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: external-dns
+    label_selectors:
+    - app.kubernetes.io/name=external-dns
+  register: external_dns_pod
+  failed_when: external_dns_pod.resources | length == 0
+
+- name: "✅ Prérequis validés"
+  debug:
+    msg: |
+      ✅ Tous les prérequis sont satisfaits:
+      - Ingress Nginx: ✅
+      - Cert Manager: ✅
+      - External DNS: ✅
