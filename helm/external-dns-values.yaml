@@ -1,0 +1,33 @@
+provider: scaleway
+
+sources:
+- ingress
+- service
+
+scaleway:
+  scwAccessKey: "" # To be filled with your Scaleway access key
+  scwSecretKey: "" # To be filled with your Scaleway secret key
+  scwDefaultOrganizationId: "" # To be filled with your Scaleway organization ID
+
+domainFilters:
+- keltio.fr
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 50m
+    memory: 64Mi
+
+logLevel: info
+logFormat: text
+
+interval: 1m
+
+policy: sync # or upsert-only
+
+txtOwnerId: "k3s-migration"
+
+registry: txt
+txtPrefix: "external-dns-"

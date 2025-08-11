@@ -32,6 +32,7 @@ Déploiement **entièrement automatisé** avec Terraform + Ansible :
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 1.0
 - [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) >= 2.9
+- [direnv](https://direnv.net/) pour la gestion sécurisée des variables
 - Account Scaleway avec API credentials
 - Domaine configuré (ex: `keltio.fr`)
 
@@ -43,20 +44,24 @@ Déploiement **entièrement automatisé** avec Terraform + Ansible :
    cd migrationcluster
    ```
 
-2. **Configurer les credentials Scaleway :**
+2. **Configurer les credentials avec direnv :**
    ```bash
-   cd infrastructure/terraform/environments/dev
-   cp terraform.tfvars.example terraform.tfvars
-   # Éditer terraform.tfvars avec vos credentials
+   # Copier le template
+   cp .envrc.example .envrc
+   
+   # Éditer avec tes credentials Scaleway
+   nano .envrc
+   
+   # Activer direnv
+   direnv allow
    ```
 
-3. **Variables Scaleway requises :**
-   ```hcl
-   # terraform.tfvars
-   scw_access_key       = "SCWXXXXXXXXXX"
-   scw_secret_key       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-   scw_organization_id  = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-   scw_project_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+3. **Variables Scaleway requises dans .envrc :**
+   ```bash
+   export SCW_ACCESS_KEY="SCWXXXXXXXXXX"
+   export SCW_SECRET_KEY="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+   export SCW_ORGANIZATION_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+   export SCW_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
    ```
 
 ### Déploiement automatique

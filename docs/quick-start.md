@@ -45,10 +45,10 @@ nano infrastructure/terraform/environments/dev/terraform.tfvars
 
 Remplir avec vos credentials:
 ```hcl
-scw_access_key      = "SCWEQB2CNV088B391ETJ"
-scw_secret_key      = "7eb6c9c3-e97d-4948-9c26-fd5d949d0fc3"
-scw_organization_id = "c41070e1-2967-4dde-8db5-dbf2f3cf63ba"
-scw_project_id      = "e22451fc-47b2-4a90-b3a0-b180e51154c9"
+scw_access_key      = "SCWXXXXXXXXXXXXXXXXX"
+scw_secret_key      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+scw_organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+scw_project_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 instance_name = "k3s-prod"  # Changez selon votre besoin
 ```

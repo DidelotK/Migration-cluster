@@ -1,0 +1,24 @@
+# =============================================================================
+# Exemple de configuration direnv pour K3s Migration Cluster
+# =============================================================================
+# 1. Copier ce fichier: cp .envrc.example .envrc
+# 2. Remplacer les credentials avec tes vraies valeurs
+# 3. Activer direnv: direnv allow
+
+# ----- Credentials Scaleway -----
+# Obtenir depuis: https://console.scaleway.com/project/credentials
+export SCW_ACCESS_KEY="SCWXXXXXXXXXXXXXXXXX"
+export SCW_SECRET_KEY="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+export SCW_ORGANIZATION_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+export SCW_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# ----- Configuration Terraform -----
+export TF_VAR_scw_access_key="$SCW_ACCESS_KEY"
+export TF_VAR_scw_secret_key="$SCW_SECRET_KEY"
+export TF_VAR_scw_organization_id="$SCW_ORGANIZATION_ID"
+export TF_VAR_scw_project_id="$SCW_PROJECT_ID"
+
+# ----- Configuration par défaut -----
+export TF_VAR_instance_name="k3s-migration-dev"
+export TF_VAR_instance_type="GP1-XS"
+export TF_VAR_zone="fr-par-1"

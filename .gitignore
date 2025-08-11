@@ -139,6 +139,10 @@ temp/
 .env.*
 !.env.example
 
+# Direnv files with secrets
+.envrc
+!.envrc.example
+
 # Certificate files
 *.pem
 *.key

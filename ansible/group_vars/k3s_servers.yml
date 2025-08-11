@@ -36,8 +36,8 @@ helm_repositories:
 - name: bitnami
   url: https://charts.bitnami.com/bitnami
 
-# Credentials Scaleway pour External DNS
-scaleway_access_key: "SCWEQB2CNV088B391ETJ"
-scaleway_secret_key: "7eb6c9c3-e97d-4948-9c26-fd5d949d0fc3"
-scaleway_organization_id: "c41070e1-2967-4dde-8db5-dbf2f3cf63ba"
-scaleway_project_id: "e22451fc-47b2-4a90-b3a0-b180e51154c9"
+# Credentials Scaleway pour External DNS (surchargés via .envrc/direnv)
+# scaleway_access_key: "{{ lookup('env', 'SCW_ACCESS_KEY') }}"
+# scaleway_secret_key: "{{ lookup('env', 'SCW_SECRET_KEY') }}"
+# scaleway_organization_id: "{{ lookup('env', 'SCW_ORGANIZATION_ID') }}"
+# scaleway_project_id: "{{ lookup('env', 'SCW_PROJECT_ID') }}"
