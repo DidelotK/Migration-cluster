@@ -1,7 +1,8 @@
 # Variables Ansible pour K3s
+# Générées automatiquement par Terraform via group_vars.yml.tpl
 instance_name: "k3s-migration-dev"
 instance_type: "GP1-XS"
-public_ip: "51.158.76.126"
+# public_ip: généré dynamiquement par Terraform
 environment: "dev"
 
 # Versions des outils
