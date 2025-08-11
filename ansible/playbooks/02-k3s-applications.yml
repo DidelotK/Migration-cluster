@@ -1,6 +1,6 @@
 ---
-# Playbook pour l'installation des applications K3s
-- name: "🏗️ Installation des applications K3s essentielles"
+# Playbook for K3s applications installation
+- name: "🏗️ Essential K3s applications installation"
   hosts: k3s_servers
   become: true
   gather_facts: true
@@ -19,17 +19,17 @@
     tags: [ applications ]
 
   post_tasks:
-  - name: "✅ Applications K3s installées"
+  - name: "✅ K3s applications installed"
     debug:
       msg: |
-        🎉 Applications K3s installées avec succès!
+        🎉 K3s applications installed successfully!
 
-        📦 Composants installés:
+        📦 Components installed:
         - Ingress Nginx {{ ingress_nginx_version | default('latest') }}
         - Cert Manager {{ cert_manager_version | default('latest') }}
         - External DNS {{ external_dns_version | default('latest') }}
 
-        🌐 Applications déployées:
+        🌐 Applications deployed:
         - Nginx Test: https://nginx.keltio.fr
 
-        🚀 Cluster prêt pour la production!
+        🚀 Cluster ready for production!

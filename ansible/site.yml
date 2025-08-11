@@ -1,5 +1,5 @@
 ---
-# Site principal - orchestration de tous les playbooks
+# Main site - orchestration of all playbooks
 
 - import_playbook: playbooks/00-prerequisites.yml
   tags: [ prerequisites ]
@@ -10,35 +10,35 @@
 - import_playbook: playbooks/02-k3s-applications.yml
   tags: [ k3s-applications ]
 
-- name: "🏁 Déploiement complet terminé"
+- name: "🏁 Complete deployment finished"
   hosts: localhost
   gather_facts: false
   run_once: true
 
   tasks:
-  - name: "🎊 Résumé final du déploiement"
+  - name: "🎊 Final deployment summary"
     debug:
       msg: |
-        🎉 DÉPLOIEMENT K3S TERMINÉ AVEC SUCCÈS! 🎉
+        🎉 K3S DEPLOYMENT COMPLETED SUCCESSFULLY! 🎉
 
-        📋 Ce qui a été installé:
-        ✅ Prérequis système
+        📋 What was installed:
+        ✅ System prerequisites
         ✅ K3s {{ hostvars[groups['k3s_servers'][0]]['k3s_version'] }}
         ✅ Helm {{ hostvars[groups['k3s_servers'][0]]['helm_version'] }}
 
-        🔗 Informations de connexion:
+        🔗 Connection information:
         - SSH: ssh root@{{ hostvars[groups['k3s_servers'][0]]['ansible_host'] }}
-        - Kubeconfig: ~/.kube/k3s.yaml (téléchargé localement)
+        - Kubeconfig: ~/.kube/k3s.yaml (downloaded locally)
 
-        📚 Commandes utiles:
+        📚 Useful commands:
         export KUBECONFIG=~/.kube/k3s.yaml
         kubectl get nodes
         kubectl get pods --all-namespaces
         helm list --all-namespaces
 
-        🚀 Prochaines étapes:
-        1. Configurer External DNS avec vos credentials
-        2. Installer les applications (nginx-test, blog-newsletter-manager, etc.)
-        3. Configurer les domaines dans Cloudflare
+        🚀 Next steps:
+        1. Configure External DNS with your credentials
+        2. Install applications (nginx-test, blog-newsletter-manager, etc.)
+        3. Configure domains in Cloudflare
 
-        🎯 Votre cluster K3s est maintenant opérationnel!
+        🎯 Your K3s cluster is now operational!

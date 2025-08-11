@@ -1,6 +1,6 @@
-# Outputs de l'infrastructure
+# Infrastructure outputs
 output "instance_details" {
-  description = "Détails de l'instance K3s"
+  description = "K3s instance details"
   value = {
     id   = module.k3s_vm.instance_id
     name = module.k3s_vm.instance_name
@@ -10,7 +10,7 @@ output "instance_details" {
 }
 
 output "network_details" {
-  description = "Détails réseau"
+  description = "Network details"
   value = {
     public_ip  = module.k3s_vm.public_ip
     private_ip = module.k3s_vm.private_ip
@@ -19,7 +19,7 @@ output "network_details" {
 }
 
 output "ssh_access" {
-  description = "Informations d'accès SSH"
+  description = "SSH access information"
   value = {
     host     = module.k3s_vm.ssh_host
     user     = module.k3s_vm.ssh_user
@@ -30,16 +30,16 @@ output "ssh_access" {
 }
 
 output "ansible_config" {
-  description = "Configuration pour Ansible"
+  description = "Configuration for Ansible"
   value = {
     inventory_file = "${path.module}/../../ansible/inventories/dev.ini"
     group_vars     = "${path.module}/../../ansible/group_vars/k3s_servers.yml"
-    playbook_cmd   = "cd ${path.module}/../../ansible && ansible-playbook -i inventories/dev.ini playbooks/k3s-install.yml"
+    playbook_cmd   = "cd ${path.module}/../../ansible && ansible-playbook -i inventories/dev.ini site.yml"
   }
 }
 
 output "k3s_config" {
-  description = "Configuration K3s"
+  description = "K3s configuration"
   value = {
     version        = var.k3s_version
     kubectl_version = var.kubectl_version
@@ -48,7 +48,7 @@ output "k3s_config" {
 }
 
 output "next_steps" {
-  description = "Prochaines étapes"
+  description = "Next steps"
   value = {
     connect_ssh    = "bash scripts/connect-dev.sh"
     run_ansible    = "cd infrastructure/terraform/environments/dev && terraform output -raw ansible_config | jq -r '.playbook_cmd' | bash"

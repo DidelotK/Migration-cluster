@@ -47,13 +47,13 @@ output "ssh_user" {
 }
 
 output "ssh_private_key_path" {
-  description = "Chemin vers la clé privée SSH"
+  description = "Path to SSH private key"
   value       = var.create_ssh_key ? "${path.root}/../../../ssh-keys/${var.ssh_key_name}" : var.ssh_private_key_path
   sensitive   = true
 }
 
 output "ssh_command" {
-  description = "Commande SSH complète pour se connecter"
+  description = "Complete SSH command to connect"
   value       = "ssh -i ${var.create_ssh_key ? "${path.root}/../../../ssh-keys/${var.ssh_key_name}" : var.ssh_private_key_path} root@${var.create_public_ip ? scaleway_instance_ip.public_ip[0].address : scaleway_instance_server.k3s_vm.public_ip}"
   sensitive   = true
 }
@@ -82,7 +82,7 @@ output "ssh_key_id" {
 
 # Informations pour Ansible
 output "ansible_inventory" {
-  description = "Configuration pour l'inventaire Ansible"
+  description = "Configuration for Ansible inventory"
   value = {
     hosts = {
       k3s_master = {

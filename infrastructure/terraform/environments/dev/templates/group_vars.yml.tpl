@@ -1,32 +1,32 @@
-# Variables Ansible générées automatiquement par Terraform
-# Ne pas modifier manuellement - sera écrasé lors du prochain 'terraform apply'
+# Ansible variables generated automatically by Terraform
+# Do not modify manually - will be overwritten on next 'terraform apply'
 
-# Informations de l'instance
+# Instance information
 instance_name: "${instance_name}"
 instance_type: "${instance_type}"
 public_ip: "${public_ip}"
 environment: "${environment}"
 
-# Versions des outils
+# Tool versions
 k3s_version: "${k3s_version}"
 kubectl_version: "${kubectl_version}"
 helm_version: "${helm_version}"
 
-# Configuration K3s
+# K3s configuration
 k3s_server_location: "/var/lib/rancher/k3s"
 k3s_config_file: "/etc/rancher/k3s/k3s.yaml"
 k3s_token_file: "/var/lib/rancher/k3s/server/node-token"
 
-# Configuration du cluster
+# Cluster configuration
 k3s_server_args:
   - "--write-kubeconfig-mode=644"
-  - "--disable=traefik"  # On utilise nginx-ingress
-  - "--disable=servicelb" # On gère les services nous-mêmes
+  - "--disable=traefik"  # We use nginx-ingress
+  - "--disable=servicelb" # We manage services ourselves
   - "--disable-cloud-controller"
   - "--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%"
   - "--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%"
 
-# Configuration Helm
+# Helm configuration
 helm_repositories:
   - name: ingress-nginx
     url: https://kubernetes.github.io/ingress-nginx
@@ -39,20 +39,20 @@ helm_repositories:
   - name: bitnami
     url: https://charts.bitnami.com/bitnami
 
-# Credentials Scaleway pour External DNS
+# Scaleway credentials for External DNS
 scaleway_access_key: "${scaleway_access_key}"
 scaleway_secret_key: "${scaleway_secret_key}"
 scaleway_organization_id: "${scaleway_organization_id}"
 scaleway_project_id: "${scaleway_project_id}"
 
-# Configuration réseau
+# Network configuration
 pod_cidr: "10.42.0.0/16"
 service_cidr: "10.43.0.0/16"
 cluster_dns: "10.43.0.10"
 
-# Limites de ressources
+# Resource limits
 max_pods_per_node: 110
 
-# Configuration de logging
+# Logging configuration
 log_level: "info"
 audit_log_enabled: false

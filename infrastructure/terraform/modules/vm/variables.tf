@@ -205,7 +205,7 @@ variable "tags" {
 
 # Variables d'environnement
 variable "environment" {
-  description = "Environnement (dev, staging, prod)"
+  description = "Environment (dev, staging, prod)"
   type        = string
   default     = "dev"
   
@@ -213,31 +213,31 @@ variable "environment" {
     condition = contains([
       "dev", "staging", "prod"
     ], var.environment)
-    error_message = "L'environnement doit être dev, staging ou prod."
+    error_message = "Environment must be dev, staging or prod."
   }
 }
 
-# Variables Scaleway pour External DNS
+# Scaleway variables for External DNS
 variable "scaleway_access_key" {
-  description = "Clé d'accès Scaleway pour External DNS"
+  description = "Scaleway access key for External DNS"
   type        = string
   sensitive   = true
 }
 
 variable "scaleway_secret_key" {
-  description = "Clé secrète Scaleway pour External DNS"
+  description = "Scaleway secret key for External DNS"
   type        = string
   sensitive   = true
 }
 
 variable "scaleway_organization_id" {
-  description = "ID de l'organisation Scaleway"
+  description = "Scaleway organization ID"
   type        = string
   sensitive   = true
 }
 
 variable "scaleway_project_id" {
-  description = "ID du projet Scaleway"
+  description = "Scaleway project ID"
   type        = string
   sensitive   = true
 }

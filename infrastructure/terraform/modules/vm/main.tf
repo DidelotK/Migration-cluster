@@ -96,22 +96,22 @@ resource "scaleway_instance_server" "k3s_vm" {
     }
   }
 
-  # Lancer Ansible automatiquement
+  # Launch Ansible automatically
   provisioner "local-exec" {
     command = <<-EOF
-      # Se placer à la racine du projet
+      # Go to project root
       cd ${path.root}/../../../..
       
-      # Attendre un peu pour que la VM soit vraiment prête
+      # Wait a bit for VM to be fully ready
       sleep 30
       
-      # Vérifier que le répertoire ansible existe
+      # Check that ansible directory exists
       if [ ! -d "ansible" ]; then
-        echo "❌ Erreur: Répertoire ansible introuvable dans $(pwd)"
+        echo "❌ Error: Ansible directory not found in $(pwd)"
         exit 1
       fi
       
-      # Lancer l'installation complète K3s + Applications via Ansible avec les credentials Scaleway
+      # Launch complete K3s + Applications installation via Ansible with Scaleway credentials
       cd ansible && ansible-playbook -i inventories/${var.environment}.ini site.yml \
         --extra-vars "scaleway_access_key=${var.scaleway_access_key}" \
         --extra-vars "scaleway_secret_key=${var.scaleway_secret_key}" \
@@ -120,7 +120,7 @@ resource "scaleway_instance_server" "k3s_vm" {
         -v
     EOF
     
-    # Variables d'environnement pour Ansible
+    # Environment variables for Ansible
     environment = {
       ANSIBLE_HOST_KEY_CHECKING = "False"
       ANSIBLE_SSH_RETRIES = "3"
