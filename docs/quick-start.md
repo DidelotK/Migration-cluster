@@ -1,12 +1,12 @@
-# 🚀 Guide de démarrage rapide
+# 🚀 Quick Start Guide
 
-Ce guide vous permettra de déployer votre cluster K3s en moins de 10 minutes.
+This guide will allow you to deploy your K3s cluster in less than 10 minutes.
 
-## ⏱️ Temps estimé: 8-10 minutes
+## ⏱️ Estimated time: 8-10 minutes
 
-## 📋 Prérequis (2 min)
+## 📋 Prerequisites (2 min)
 
-### Installation des outils
+### Tool installation
 
 **Sur macOS:**
 ```bash
@@ -19,49 +19,53 @@ sudo apt update
 sudo apt install -y terraform ansible kubectl jq curl
 ```
 
-### Credentials Scaleway
-Vous devez avoir:
-- ✅ Clé d'accès Scaleway
-- ✅ Clé secrète Scaleway  
+### Scaleway Credentials
+You must have:
+- ✅ Scaleway access key
+- ✅ Scaleway secret key  
 - ✅ Organization ID
 - ✅ Project ID
 
-## 🏗️ Étape 1: Configuration (1 min)
+## 🏗️ Step 1: Configuration (1 min)
 
 ```bash
-# Cloner le projet
+# Clone the project
 git clone <your-repo>
 cd migrationcluster
 
-# Copier la configuration
-cp infrastructure/terraform/environments/dev/terraform.tfvars.example \
-   infrastructure/terraform/environments/dev/terraform.tfvars
+# Copy environment configuration
+cp .envrc.example .envrc
 ```
 
-Éditer le fichier `terraform.tfvars`:
+Edit the `.envrc` file:
 ```bash
-nano infrastructure/terraform/environments/dev/terraform.tfvars
+nano .envrc
 ```
 
-Remplir avec vos credentials:
-```hcl
-scw_access_key      = "SCWXXXXXXXXXXXXXXXXX"
-scw_secret_key      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-scw_organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-scw_project_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+Fill in with your credentials:
+```bash
+export SCW_ACCESS_KEY="SCWXXXXXXXXXXXXXXXXX"
+export SCW_SECRET_KEY="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+export SCW_ORGANIZATION_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+export SCW_PROJECT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-instance_name = "k3s-prod"  # Changez selon votre besoin
+export TF_VAR_instance_name="k3s-prod"  # Change according to your needs
 ```
 
-## 🚀 Étape 2: Déploiement automatique (5-7 min)
+Activate direnv:
+```bash
+direnv allow
+```
 
-### Option A: Script tout-en-un (Recommandé)
+## 🚀 Step 2: Automatic deployment (5-7 min)
+
+### Option A: All-in-one script (Recommended)
 
 ```bash
-./scripts/deploy-full-stack.sh dev
+./deploy-complete-automation.sh
 ```
 
-### Option B: Étape par étape
+### Option B: Step by step
 
 ```bash
 # 1. Infrastructure (2-3 min)
@@ -69,98 +73,103 @@ cd infrastructure/terraform/environments/dev
 terraform init
 terraform apply -auto-approve
 
-# 2. Installation K3s (3-4 min)
+# 2. K3s installation (3-4 min)
 cd ../../../../ansible
 ansible-playbook -i inventories/dev.ini site.yml
 ```
 
-## ✅ Étape 3: Vérification (1 min)
+## ✅ Step 3: Verification (1 min)
 
 ```bash
-# Configuration kubectl
+# Configure kubectl
 export KUBECONFIG=~/.kube/k3s.yaml
 
-# Test du cluster
+# Test the cluster
 kubectl get nodes
 kubectl get pods --all-namespaces
 
-# Test d'une application
+# Test an application
 IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}')
 curl -k https://$IP
 ```
 
-## 🎯 Résultat attendu
+## 🎯 Expected result
 
-Après ces étapes, vous devriez avoir:
+After these steps, you should have:
 
-✅ **VM Scaleway** déployée et configurée  
-✅ **K3s cluster** opérationnel  
-✅ **Helm** installé et configuré  
-✅ **kubectl** configuré localement  
-✅ **Prêt** pour déployer des applications  
+✅ **Scaleway VM** deployed and configured  
+✅ **K3s cluster** operational  
+✅ **Helm** installed and configured  
+✅ **kubectl** configured locally  
+✅ **Ready** to deploy applications  
 
-## 📊 Informations importantes
+## 📊 Important information
 
-Une fois terminé, notez ces informations:
+Once completed, note this information:
 
 ```bash
-# IP de votre cluster
+# Your cluster IP
 terraform output -raw network_details | jq -r '.public_ip'
 
-# Commande SSH
+# SSH command
 terraform output -raw ssh_access | jq -r '.command'
 
-# Kubeconfig local
+# Local kubeconfig
 echo $KUBECONFIG
 ```
 
-## 🚀 Prochaines étapes
+## 🚀 Next steps
 
-Maintenant que votre cluster est prêt:
+Now that your cluster is ready:
 
-1. **Installer les composants essentiels** (Ingress, Cert Manager, etc.)
-2. **Déployer vos applications**
-3. **Configurer les domaines DNS**
+1. **Install essential components** (Ingress, Cert Manager, etc.)
+2. **Deploy your applications**
+3. **Configure DNS domains**
 
-Voir le [Guide des applications](applications.md) pour la suite.
+See the [Applications Guide](applications.md) for next steps.
 
-## 🐛 Problèmes courants
+## 🐛 Common issues
 
 ### Terraform: "Invalid credentials"
 ```bash
-# Vérifiez vos credentials dans terraform.tfvars
-cat infrastructure/terraform/environments/dev/terraform.tfvars
+# Check your credentials in .envrc
+cat .envrc
+# Make sure direnv is activated
+direnv allow
 ```
 
 ### SSH: "Permission denied"
 ```bash
-# Les clés SSH sont générées automatiquement
-# Vérifiez les permissions:
-chmod 600 ~/.ssh/k3s_*
+# SSH keys are generated automatically in ssh-keys/
+# Check permissions:
+chmod 600 ssh-keys/k3s-migration-dev
+# Or use the built-in function:
+k3s-ssh
 ```
 
 ### Ansible: "Unreachable host"
 ```bash
-# Attendez 1-2 minutes que la VM termine son initialisation
-# Puis relancez:
+# Wait 1-2 minutes for the VM to finish initialization
+# Then retry:
 ansible-playbook -i inventories/dev.ini site.yml
 ```
 
-## 💡 Conseils
+## 💡 Tips
 
-- **Première fois?** Utilisez l'environnement `dev`
-- **Production?** Utilisez l'environnement `prod` avec une VM plus puissante
-- **Problème?** Consultez les logs avec `kubectl logs`
-- **Backup?** Les configurations sont dans Git, votre données dans les PVC
+- **First time?** Use the `dev` environment
+- **Production?** Use the `prod` environment with a more powerful VM
+- **Quick commands?** Use built-in functions: `deploy`, `destroy`, `k3s-ssh`, `status`
+- **Problem?** Check logs with `kubectl logs`
+- **Backup?** Configurations are in Git, your data in PVCs
 
-## 📞 Aide
+## 📞 Help
 
-Si vous rencontrez des problèmes:
+If you encounter problems:
 
-1. Consultez les [logs](#🐛-problèmes-courants)
-2. Vérifiez le [troubleshooting](../README.md#🐛-troubleshooting)
-3. Ouvrez une issue sur le projet
+1. Check the [logs](#🐛-common-issues)
+2. Review the [troubleshooting](../README.md#🐛-troubleshooting)
+3. Open an issue on the project
 
 ---
 
-**🎉 Félicitations! Votre cluster K3s est maintenant opérationnel!**
+**🎉 Congratulations! Your K3s cluster is now operational!**
