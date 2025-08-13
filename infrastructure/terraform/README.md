@@ -15,12 +15,9 @@ terraform/
 ├── modules/                    # Reusable modules
 │   └── vm/                    # VM module
 ├── environments/              # Environment-specific configs
-│   ├── dev/                   # Development environment
 │   ├── staging/               # Staging environment
 │   ├── prod/                  # Production environment
 │   └── backend-configs/       # Backend config files
-├── setup-backend.sh           # Backend setup script
-├── migrate-to-backend.sh      # State migration script
 └── README.md                  # This file
 ```
 
@@ -34,27 +31,35 @@ First time setup to create the S3 bucket for state storage:
 # From project root, ensure environment is loaded
 direnv allow
 
-# Setup the backend
-cd infrastructure/terraform
-./setup-backend.sh
+# Setup the backend manually
+cd infrastructure/terraform/backend
+terraform init
+terraform apply
 ```
 
 ### 2. Initialize Environment
 
-For a fresh environment:
+For staging or production:
 
 ```bash
-cd environments/dev
-terraform init -backend-config=../backend-configs/dev.hcl
+cd environments/staging
+terraform init -backend-config=../backend-configs/staging.hcl
 ```
 
-### 3. Migrate Existing State (if needed)
+### 3. Deploy Infrastructure
 
-If you have existing local state:
+Deploy to staging or production:
 
 ```bash
-cd infrastructure/terraform
-./migrate-to-backend.sh
+# Staging
+cd environments/staging
+terraform plan
+terraform apply
+
+# Production (with caution)
+cd environments/prod
+terraform plan
+terraform apply
 ```
 
 ## 🔧 Backend Configuration
@@ -73,14 +78,6 @@ The backend uses Scaleway Object Storage (S3-compatible) to store Terraform stat
 - ✅ **Locking**: Prevents concurrent modifications
 
 ## 📋 Environment Management
-
-### Development
-```bash
-cd environments/dev
-terraform init -backend-config=../backend-configs/dev.hcl
-terraform plan
-terraform apply
-```
 
 ### Staging
 ```bash
