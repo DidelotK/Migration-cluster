@@ -119,10 +119,11 @@ migrationcluster/
 │   └── terraform/                    
 │       ├── modules/vm/              # Module VM Scaleway
 │       └── environments/dev/        # Configuration environnement
-├── ansible/                         # Automation
-│   ├── roles/                       # Rôles K3s, Helm, Ingress, etc.
-│   ├── playbooks/                   # Playbooks par composant
-│   └── inventories/                 # Inventaires par environnement
+│   ├── ansible/                     # Automation
+│   │   ├── roles/                   # Rôles K3s, Helm, Ingress, etc.
+│   │   ├── playbooks/               # Playbooks par composant
+│   │   └── inventories/             # Inventaires par environnement
+│   └── helm/                        # Helm chart values
 ├── k8s/                            # Manifests applications (vides par défaut)
 └── ssh-keys/                       # Clés SSH générées
 ```

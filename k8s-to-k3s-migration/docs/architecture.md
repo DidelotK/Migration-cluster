@@ -55,7 +55,7 @@ La solution de migration K8s → K3s est conçue comme un système modulaire et 
 - Génération et gestion des clés SSH
 - Intégration automatique avec Ansible
 
-**Ansible Roles** (`ansible/roles/`)
+**Ansible Roles** (`infrastructure/ansible/roles/`)
 - `k3s/` - Installation et configuration K3s
 - `helm/` - Installation et configuration Helm
 - `ingress-nginx/` - Déploiement Ingress Controller

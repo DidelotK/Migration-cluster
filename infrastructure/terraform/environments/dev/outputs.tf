@@ -32,9 +32,9 @@ output "ssh_access" {
 output "ansible_config" {
   description = "Configuration for Ansible"
   value = {
-    inventory_file = "${path.module}/../../ansible/inventories/dev.ini"
-    group_vars     = "${path.module}/../../ansible/group_vars/k3s_servers.yml"
-    playbook_cmd   = "cd ${path.module}/../../ansible && ansible-playbook -i inventories/dev.ini site.yml"
+    inventory_file = "${path.module}/../ansible/inventories/dev.ini"
+    group_vars     = "${path.module}/../ansible/group_vars/k3s_servers.yml"
+    playbook_cmd   = "cd ${path.module}/../ansible && ansible-playbook -i inventories/dev.ini site.yml"
   }
 }
 

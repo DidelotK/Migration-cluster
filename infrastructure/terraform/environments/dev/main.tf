@@ -69,7 +69,7 @@ resource "local_file" "ansible_inventory" {
   content = templatefile("${path.module}/templates/inventory.ini.tpl", {
     ansible_inventory = module.k3s_vm.ansible_inventory
   })
-  filename = "${path.module}/../../ansible/inventories/dev.ini"
+  filename = "${path.module}/../ansible/inventories/dev.ini"
   
   depends_on = [module.k3s_vm]
 }
@@ -89,7 +89,7 @@ resource "local_file" "ansible_vars" {
     scaleway_organization_id = var.scw_organization_id
     scaleway_project_id      = var.scw_project_id
   })
-  filename = "${path.module}/../../ansible/group_vars/k3s_servers.yml"
+  filename = "${path.module}/../ansible/group_vars/k3s_servers.yml"
   
   depends_on = [module.k3s_vm]
 }
