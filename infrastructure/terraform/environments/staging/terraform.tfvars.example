@@ -1,0 +1,49 @@
+# Scaleway Configuration
+scw_access_key      = "SCWXXXXXXXXXXXXXXXXX"
+scw_secret_key      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+scw_organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+scw_project_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+scw_region          = "fr-par"
+scw_zone            = "fr-par-1"
+
+# Instance Configuration
+instance_name = "k3s-migration-staging"
+instance_type = "DEV1-S"  # Smaller instance for staging
+zone          = "fr-par-1"
+
+# Storage Configuration
+root_volume_size = 20  # Smaller volume for staging
+root_volume_type = "l_ssd"
+
+# SSH Configuration
+ssh_key_name       = "k3s-migration-staging"
+create_ssh_key     = true
+create_public_ip   = true
+enable_ipv6        = false
+
+# K3s Configuration
+k3s_version     = "v1.28.5+k3s1"
+kubectl_version = "v1.28.5"
+helm_version    = "v3.13.0"
+
+# System Configuration
+timezone = "Europe/Paris"
+packages = [
+  "curl",
+  "wget", 
+  "git",
+  "htop",
+  "tree"
+]
+
+# Tags
+default_tags = {
+  Environment = "staging"
+  Project     = "k3s-migration"
+  ManagedBy   = "terraform"
+}
+
+additional_tags = {
+  CostCenter = "development"
+  Owner      = "devops-team"
+}

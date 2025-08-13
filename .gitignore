@@ -31,6 +31,12 @@ terraform.rc
 .terraform.lock.hcl
 .terraform/
 
+# Backend terraform files
+infrastructure/terraform/backend/terraform.tfvars
+terraform.tfplan
+*.backup
+*.bak
+
 # Terraform plans
 *.tfplan
 *.tfplan.*

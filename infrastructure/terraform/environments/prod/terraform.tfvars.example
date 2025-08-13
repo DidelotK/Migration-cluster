@@ -1,0 +1,58 @@
+# Scaleway Configuration
+scw_access_key      = "SCWXXXXXXXXXXXXXXXXX"
+scw_secret_key      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+scw_organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+scw_project_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+scw_region          = "fr-par"
+scw_zone            = "fr-par-1"
+
+# Instance Configuration - Production specs
+instance_name = "k3s-migration-prod"
+instance_type = "GP1-XS"  # Production instance (4 vCPU, 16GB RAM)
+zone          = "fr-par-1"
+
+# Storage Configuration - Production specs
+root_volume_size = 100  # Larger volume for production
+root_volume_type = "l_ssd"  # SSD for performance
+
+# SSH Configuration
+ssh_key_name       = "k3s-migration-prod"
+create_ssh_key     = true
+create_public_ip   = true
+enable_ipv6        = false
+
+# K3s Configuration - Stable versions for production
+k3s_version     = "v1.28.5+k3s1"
+kubectl_version = "v1.28.5"
+helm_version    = "v3.13.0"
+
+# System Configuration
+timezone = "Europe/Paris"
+packages = [
+  "curl",
+  "wget", 
+  "git",
+  "htop",
+  "tree",
+  "jq",
+  "unzip",
+  "fail2ban",  # Security for production
+  "ufw"        # Firewall for production
+]
+
+# Tags - Production specific
+default_tags = {
+  Environment = "production"
+  Project     = "k3s-migration"
+  ManagedBy   = "terraform"
+  Criticality = "high"
+  Backup      = "required"
+}
+
+additional_tags = {
+  CostCenter    = "production"
+  Owner         = "platform-team"
+  Monitoring    = "enabled"
+  Alerting      = "enabled"
+  Compliance    = "required"
+}

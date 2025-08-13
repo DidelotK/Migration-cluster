@@ -117,8 +117,17 @@ migrationcluster/
 ├── docs/                             # Documentation
 ├── infrastructure/                   # Infrastructure as Code
 │   ├── terraform/                    
+│   │   ├── backend/                 # S3 backend setup
+│   │   ├── shared/                  # Shared configurations
 │   │   ├── modules/vm/              # Module VM Scaleway
-│   │   └── environments/dev/        # Configuration environnement
+│   │   ├── environments/            # Multi-environment configs
+│   │   │   ├── dev/                 # Development environment
+│   │   │   ├── staging/             # Staging environment
+│   │   │   ├── prod/                # Production environment
+│   │   │   └── backend-configs/     # Backend configurations
+│   │   ├── setup-backend.sh         # Backend setup script
+│   │   ├── migrate-to-backend.sh    # State migration script
+│   │   └── manage-environments.sh   # Multi-env management
 │   ├── ansible/                     # Automation
 │   │   ├── roles/                   # Rôles K3s, Helm, Ingress, etc.
 │   │   ├── playbooks/               # Playbooks par composant
