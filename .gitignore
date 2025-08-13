@@ -172,5 +172,17 @@ scw.config
 # MinIO credentials
 .minio_*
 
+# ----- Migration specific -----
+# Migration exports contain sensitive data
+k8s-to-k3s-migration/exported-manifests/
+**/data-export/
+**/data-import/
+migration-complete.md
+
+# Kubeconfig files (contain sensitive cluster access)
+kubeconfig-*.yaml
+kubeconfig*.yaml
+*kubeconfig*.yaml
+
 # ----- Custom ignores -----
 # Add any project-specific ignores here
