@@ -29,8 +29,8 @@ case "${1:-help}" in
         fi
         echo "✅ kubectl disponible"
         
-        echo "🔗 Test de connectivité (timeout 10s)..."
-        if kubectl --kubeconfig="$SOURCE_KUBECONFIG" --request-timeout=10s get nodes >/dev/null 2>&1; then
+        echo "🔗 Test de connectivité (timeout 3s)..."
+        if kubectl --kubeconfig="$SOURCE_KUBECONFIG" --request-timeout=3s get nodes >/dev/null 2>&1; then
             echo "✅ Cluster source accessible"
         else
             echo "⚠️  Cluster source non accessible (token expiré ou cluster arrêté)"

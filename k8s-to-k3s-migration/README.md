@@ -14,8 +14,6 @@ Ce projet fournit une solution complète et automatisée pour migrer des applica
 
 ```
 k8s-to-k3s-migration/
-├── automation/
-│   └── migrate.sh              # Script principal de migration
 ├── scripts/
 │   ├── export-manifests-and-secrets.sh  # Export du cluster source
 │   ├── setup-secrets.sh                 # Configuration des secrets K3s
@@ -134,13 +132,12 @@ cp votre-kubeconfig.yaml kubeconfig-keltio-prod.yaml
 
 ```bash
 # Migration complète
-./k8s-to-k3s-migration/automation/migrate.sh
+./k8s-to-k3s-migration/scripts/complete-migration.sh
 
 # Ou migration par phase
-./k8s-to-k3s-migration/automation/migrate.sh export    # Export données
-./k8s-to-k3s-migration/automation/migrate.sh deploy    # Déployer apps
-./k8s-to-k3s-migration/automation/migrate.sh import    # Importer données
-./k8s-to-k3s-migration/automation/migrate.sh validate  # Valider
+./k8s-to-k3s-migration/scripts/export-manifests-and-secrets.sh    # Export données
+./k8s-to-k3s-migration/scripts/setup-secrets.sh                   # Configurer secrets
+./k8s-to-k3s-migration/scripts/test-migration.sh                  # Valider
 ```
 
 ## 📦 Applications Supportées
