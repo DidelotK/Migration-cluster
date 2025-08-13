@@ -48,13 +48,13 @@ output "ssh_user" {
 
 output "ssh_private_key_path" {
   description = "Path to SSH private key"
-  value       = var.create_ssh_key ? "${path.root}/../../../ssh-keys/${var.ssh_key_name}" : var.ssh_private_key_path
+  value       = var.create_ssh_key ? "${path.root}/../../ssh-keys/${var.ssh_key_name}" : var.ssh_private_key_path
   sensitive   = true
 }
 
 output "ssh_command" {
   description = "Complete SSH command to connect"
-  value       = "ssh -i ${var.create_ssh_key ? "${path.root}/../../../ssh-keys/${var.ssh_key_name}" : var.ssh_private_key_path} root@${var.create_public_ip ? scaleway_instance_ip.public_ip[0].address : scaleway_instance_server.k3s_vm.public_ip}"
+  value       = "ssh -i ${var.create_ssh_key ? "${path.root}/../../ssh-keys/${var.ssh_key_name}" : var.ssh_private_key_path} root@${var.create_public_ip ? scaleway_instance_ip.public_ip[0].address : scaleway_instance_server.k3s_vm.public_ip}"
   sensitive   = true
 }
 
@@ -88,7 +88,7 @@ output "ansible_inventory" {
       k3s_master = {
         ansible_host = var.create_public_ip ? scaleway_instance_ip.public_ip[0].address : scaleway_instance_server.k3s_vm.public_ip
         ansible_user = "root"
-        ansible_ssh_private_key_file = var.create_ssh_key ? "${path.root}/../../../ssh-keys/${var.ssh_key_name}" : var.ssh_private_key_path
+        ansible_ssh_private_key_file = var.create_ssh_key ? "${path.root}/../../ssh-keys/${var.ssh_key_name}" : var.ssh_private_key_path
         ansible_ssh_common_args = "-o StrictHostKeyChecking=no"
       }
     }

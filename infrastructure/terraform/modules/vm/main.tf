@@ -18,10 +18,10 @@ resource "tls_private_key" "k3s_key" {
 resource "local_file" "private_key" {
   count    = var.create_ssh_key ? 1 : 0
   content  = tls_private_key.k3s_key[0].private_key_openssh
-  filename = "${path.root}/../../../ssh-keys/${var.ssh_key_name}"
+  filename = "${path.root}/../../ssh-keys/${var.ssh_key_name}"
   
   provisioner "local-exec" {
-    command = "chmod 600 ${path.root}/../../../ssh-keys/${var.ssh_key_name}"
+    command = "chmod 600 ${path.root}/../../ssh-keys/${var.ssh_key_name}"
   }
 }
 
@@ -29,17 +29,17 @@ resource "local_file" "private_key" {
 resource "local_file" "public_key" {
   count    = var.create_ssh_key ? 1 : 0
   content  = tls_private_key.k3s_key[0].public_key_openssh
-  filename = "${path.root}/../../../ssh-keys/${var.ssh_key_name}.pub"
+  filename = "${path.root}/../../ssh-keys/${var.ssh_key_name}.pub"
   
   provisioner "local-exec" {
-    command = "chmod 644 ${path.root}/../../../ssh-keys/${var.ssh_key_name}.pub"
+    command = "chmod 644 ${path.root}/../../ssh-keys/${var.ssh_key_name}.pub"
   }
 }
 
 # Clé SSH Scaleway
 resource "scaleway_iam_ssh_key" "k3s_key" {
   name       = var.ssh_key_name
-  public_key = var.create_ssh_key ? tls_private_key.k3s_key[0].public_key_openssh : file("${path.root}/../../../ssh-keys/${var.ssh_key_name}.pub")
+  public_key = var.create_ssh_key ? tls_private_key.k3s_key[0].public_key_openssh : file("${path.root}/../../ssh-keys/${var.ssh_key_name}.pub")
 }
 
 # IP publique
@@ -73,7 +73,7 @@ resource "scaleway_instance_server" "k3s_vm" {
 
   # Script d'initialisation
   cloud_init = base64encode(templatefile("${path.module}/cloud-init.yml", {
-    ssh_public_key = var.create_ssh_key ? tls_private_key.k3s_key[0].public_key_openssh : file("${path.root}/../../../ssh-keys/${var.ssh_key_name}.pub")
+    ssh_public_key = var.create_ssh_key ? tls_private_key.k3s_key[0].public_key_openssh : file("${path.root}/../../ssh-keys/${var.ssh_key_name}.pub")
     hostname       = var.instance_name
     timezone       = var.timezone
     packages       = var.packages
@@ -90,7 +90,7 @@ resource "scaleway_instance_server" "k3s_vm" {
     connection {
       type        = "ssh"
       user        = "root"
-      private_key = var.create_ssh_key ? tls_private_key.k3s_key[0].private_key_openssh : file("${path.root}/../../../ssh-keys/${var.ssh_key_name}")
+      private_key = var.create_ssh_key ? tls_private_key.k3s_key[0].private_key_openssh : file("${path.root}/../../ssh-keys/${var.ssh_key_name}")
       host        = var.create_public_ip ? scaleway_instance_ip.public_ip[0].address : self.public_ip
       timeout     = "5m"
     }
