@@ -7,6 +7,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 EXPORT_DIR="$PROJECT_ROOT/k8s-to-k3s-migration/exported-manifests"
+KELTIO_PROD_DIR="$PROJECT_ROOT/k8s-manifests/keltio-prod"
 
 # Configuration
 SOURCE_KUBECONFIG="${SOURCE_KUBECONFIG:-$PROJECT_ROOT/kubeconfig-keltio-prod.yaml}"
@@ -166,13 +167,25 @@ EOF
         ;;
         
     "full")
-        echo "🔄 Export complet..."
+        echo "🔄 Full export (with keltio-prod structure)..."
+        
+        # Create both directory structures
+        echo "📁 Creating export directories..."
         "$0" structure
+        
+        echo "📁 Creating keltio-prod directory structure..."
+        mkdir -p "$KELTIO_PROD_DIR"/{namespaces,secrets,vaultwarden,monitoring,ops,gitlab-runner,hubspot-manager,reloader,keda}
+        
         echo ""
-        echo "⚠️  Export depuis cluster source non implémenté (cluster non accessible)"
-        echo "💡 Utilisez:"
-        echo "  - '$0 simulate' pour tester"
-        echo "  - '$0 from-k3s' pour exporter l'état K3s actuel"
+        echo "⚠️  Export from source cluster not implemented (cluster not accessible)"
+        echo "💡 Available options:"
+        echo "  - '$0 simulate' to test functionality"
+        echo "  - '$0 from-k3s' to export current K3s state"
+        echo "  - Manual copy from backup files to k8s-manifests/keltio-prod/"
+        echo ""
+        echo "📁 Directories created:"
+        echo "  - $EXPORT_DIR"
+        echo "  - $KELTIO_PROD_DIR"
         ;;
         
     *)

@@ -116,16 +116,23 @@ migrationcluster/
 ├── destroy-infrastructure.sh         # Destruction
 ├── docs/                             # Documentation
 ├── infrastructure/                   # Infrastructure as Code
-│   └── terraform/                    
-│       ├── modules/vm/              # Module VM Scaleway
-│       └── environments/dev/        # Configuration environnement
+│   ├── terraform/                    
+│   │   ├── modules/vm/              # Module VM Scaleway
+│   │   └── environments/dev/        # Configuration environnement
 │   ├── ansible/                     # Automation
 │   │   ├── roles/                   # Rôles K3s, Helm, Ingress, etc.
 │   │   ├── playbooks/               # Playbooks par composant
 │   │   └── inventories/             # Inventaires par environnement
-│   └── helm/                        # Helm chart values
-├── k8s/                            # Manifests applications (vides par défaut)
-└── ssh-keys/                       # Clés SSH générées
+│   ├── helm/                        # Helm chart values
+│   └── ssh-keys/                    # Clés SSH générées
+├── k8s-manifests/                   # Kubernetes manifests par environnement
+│   ├── keltio-prod/                 # Manifests du cluster source
+│   ├── k3s-target/                  # Manifests adaptés pour K3s
+│   └── shared/                      # Manifests génériques
+└── k8s-to-k3s-migration/            # Outils de migration
+    ├── scripts/                     # Scripts d'automation
+    ├── docs/                        # Documentation migration
+    └── configs/                     # Templates et configurations
 ```
 
 ## 🛠️ Composants déployés
